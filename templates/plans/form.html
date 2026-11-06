@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}New plan · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a href="{% url 'plans' %}" class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]">
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">Plans</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-xl">
+    <h1 class="hidden text-2xl font-bold md:block">New plan</h1>
+    <p class="mt-1 hidden text-sm text-base-content/60 md:block">
+      Add training days and exercises next. You can activate the plan when it is ready.
+    </p>
+
+    <form method="post" class="mt-4 space-y-5 md:mt-6">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error items-start text-sm" role="alert">
+          <div class="space-y-1">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="{{ form.name.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.name.label }}</label>
+        {{ form.name }}
+        {% for error in form.name.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+
+      <div>
+        <label for="{{ form.split_type.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.split_type.label }}</label>
+        {{ form.split_type }}
+        {% for error in form.split_type.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="{{ form.start_date.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.start_date.label }}</label>
+          {{ form.start_date }}
+          {% for error in form.start_date.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+        <div>
+          <label for="{{ form.length_weeks.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+            {{ form.length_weeks.label }} <span class="font-normal text-base-content/50">(optional)</span>
+          </label>
+          {{ form.length_weeks }}
+          <p class="mt-1.5 text-[13px] text-base-content/60">{{ form.length_weeks.help_text }}</p>
+          {% for error in form.length_weeks.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary h-14 min-h-14 w-full text-[17px] font-semibold">
+        Create plan
+      </button>
+    </form>
+  </div>
+{% endblock %}

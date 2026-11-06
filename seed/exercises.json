@@ -1,0 +1,697 @@
+[
+  {
+    "name": "Barbell Bench Press",
+    "primary": "Chest",
+    "secondary": [
+      "Triceps",
+      "Shoulders"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Incline Barbell Bench Press",
+    "primary": "Chest",
+    "secondary": [
+      "Shoulders",
+      "Triceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Dumbbell Bench Press",
+    "primary": "Chest",
+    "secondary": [
+      "Triceps",
+      "Shoulders"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Incline Dumbbell Press",
+    "primary": "Chest",
+    "secondary": [
+      "Shoulders",
+      "Triceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Decline Bench Press",
+    "primary": "Chest",
+    "secondary": [
+      "Triceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Machine Chest Press",
+    "primary": "Chest",
+    "secondary": [
+      "Triceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Dumbbell Fly",
+    "primary": "Chest",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Cable Fly",
+    "primary": "Chest",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Pec Deck",
+    "primary": "Chest",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Push-up",
+    "primary": "Chest",
+    "secondary": [
+      "Triceps",
+      "Shoulders"
+    ],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Chest Dip",
+    "primary": "Chest",
+    "secondary": [
+      "Triceps"
+    ],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Deadlift",
+    "primary": "Back",
+    "secondary": [
+      "Hamstrings",
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Barbell Row",
+    "primary": "Back",
+    "secondary": [
+      "Biceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Dumbbell Row",
+    "primary": "Back",
+    "secondary": [
+      "Biceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Pull-up",
+    "primary": "Back",
+    "secondary": [
+      "Biceps"
+    ],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Chin-up",
+    "primary": "Back",
+    "secondary": [
+      "Biceps"
+    ],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Lat Pulldown",
+    "primary": "Back",
+    "secondary": [
+      "Biceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Seated Cable Row",
+    "primary": "Back",
+    "secondary": [
+      "Biceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "T-Bar Row",
+    "primary": "Back",
+    "secondary": [
+      "Biceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Chest-Supported Row",
+    "primary": "Back",
+    "secondary": [
+      "Biceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Straight-Arm Pulldown",
+    "primary": "Back",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Back Extension",
+    "primary": "Back",
+    "secondary": [
+      "Glutes",
+      "Hamstrings"
+    ],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Rack Pull",
+    "primary": "Back",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Overhead Press",
+    "primary": "Shoulders",
+    "secondary": [
+      "Triceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Dumbbell Shoulder Press",
+    "primary": "Shoulders",
+    "secondary": [
+      "Triceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Arnold Press",
+    "primary": "Shoulders",
+    "secondary": [
+      "Triceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Machine Shoulder Press",
+    "primary": "Shoulders",
+    "secondary": [
+      "Triceps"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Lateral Raise",
+    "primary": "Shoulders",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Cable Lateral Raise",
+    "primary": "Shoulders",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Front Raise",
+    "primary": "Shoulders",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Rear Delt Fly",
+    "primary": "Shoulders",
+    "secondary": [
+      "Back"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Face Pull",
+    "primary": "Shoulders",
+    "secondary": [
+      "Back"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Upright Row",
+    "primary": "Shoulders",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Barbell Shrug",
+    "primary": "Back",
+    "secondary": [
+      "Forearms"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Dumbbell Shrug",
+    "primary": "Back",
+    "secondary": [
+      "Forearms"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Barbell Curl",
+    "primary": "Biceps",
+    "secondary": [
+      "Forearms"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Dumbbell Curl",
+    "primary": "Biceps",
+    "secondary": [
+      "Forearms"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Hammer Curl",
+    "primary": "Biceps",
+    "secondary": [
+      "Forearms"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Preacher Curl",
+    "primary": "Biceps",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Incline Dumbbell Curl",
+    "primary": "Biceps",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Cable Curl",
+    "primary": "Biceps",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "EZ-Bar Curl",
+    "primary": "Biceps",
+    "secondary": [
+      "Forearms"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Concentration Curl",
+    "primary": "Biceps",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Triceps Pushdown",
+    "primary": "Triceps",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Overhead Triceps Extension",
+    "primary": "Triceps",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Skull Crusher",
+    "primary": "Triceps",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Close-Grip Bench Press",
+    "primary": "Triceps",
+    "secondary": [
+      "Chest"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Triceps Dip",
+    "primary": "Triceps",
+    "secondary": [
+      "Chest"
+    ],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Triceps Kickback",
+    "primary": "Triceps",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Wrist Curl",
+    "primary": "Forearms",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Reverse Wrist Curl",
+    "primary": "Forearms",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Farmer's Carry",
+    "primary": "Forearms",
+    "secondary": [
+      "Back",
+      "Core"
+    ],
+    "tracking_type": "WEIGHT_DISTANCE"
+  },
+  {
+    "name": "Dead Hang",
+    "primary": "Forearms",
+    "secondary": [
+      "Back"
+    ],
+    "tracking_type": "TIMED"
+  },
+  {
+    "name": "Back Squat",
+    "primary": "Quads",
+    "secondary": [
+      "Glutes",
+      "Hamstrings"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Front Squat",
+    "primary": "Quads",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Leg Press",
+    "primary": "Quads",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Hack Squat",
+    "primary": "Quads",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Leg Extension",
+    "primary": "Quads",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Bulgarian Split Squat",
+    "primary": "Quads",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Walking Lunge",
+    "primary": "Quads",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Goblet Squat",
+    "primary": "Quads",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Step-up",
+    "primary": "Quads",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Wall Sit",
+    "primary": "Quads",
+    "secondary": [],
+    "tracking_type": "TIMED"
+  },
+  {
+    "name": "Romanian Deadlift",
+    "primary": "Hamstrings",
+    "secondary": [
+      "Glutes",
+      "Back"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Lying Leg Curl",
+    "primary": "Hamstrings",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Seated Leg Curl",
+    "primary": "Hamstrings",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Good Morning",
+    "primary": "Hamstrings",
+    "secondary": [
+      "Back",
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Nordic Curl",
+    "primary": "Hamstrings",
+    "secondary": [],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Stiff-Leg Deadlift",
+    "primary": "Hamstrings",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Hip Thrust",
+    "primary": "Glutes",
+    "secondary": [
+      "Hamstrings"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Glute Bridge",
+    "primary": "Glutes",
+    "secondary": [
+      "Hamstrings"
+    ],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Cable Kickback",
+    "primary": "Glutes",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Hip Abduction Machine",
+    "primary": "Glutes",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Sumo Deadlift",
+    "primary": "Glutes",
+    "secondary": [
+      "Quads",
+      "Back"
+    ],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Standing Calf Raise",
+    "primary": "Calves",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Seated Calf Raise",
+    "primary": "Calves",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Leg Press Calf Raise",
+    "primary": "Calves",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Single-Leg Calf Raise",
+    "primary": "Calves",
+    "secondary": [],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Plank",
+    "primary": "Core",
+    "secondary": [],
+    "tracking_type": "TIMED"
+  },
+  {
+    "name": "Side Plank",
+    "primary": "Core",
+    "secondary": [],
+    "tracking_type": "TIMED"
+  },
+  {
+    "name": "Hanging Leg Raise",
+    "primary": "Core",
+    "secondary": [],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Cable Crunch",
+    "primary": "Core",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Crunch",
+    "primary": "Core",
+    "secondary": [],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Ab Wheel Rollout",
+    "primary": "Core",
+    "secondary": [],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Russian Twist",
+    "primary": "Core",
+    "secondary": [],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Dead Bug",
+    "primary": "Core",
+    "secondary": [],
+    "tracking_type": "BODYWEIGHT"
+  },
+  {
+    "name": "Pallof Press",
+    "primary": "Core",
+    "secondary": [],
+    "tracking_type": "WEIGHT_REPS"
+  },
+  {
+    "name": "Walk",
+    "primary": "Cardio",
+    "secondary": [],
+    "tracking_type": "CARDIO"
+  },
+  {
+    "name": "Run",
+    "primary": "Cardio",
+    "secondary": [],
+    "tracking_type": "CARDIO"
+  },
+  {
+    "name": "Treadmill Incline Walk",
+    "primary": "Cardio",
+    "secondary": [],
+    "tracking_type": "CARDIO"
+  },
+  {
+    "name": "Stationary Bike",
+    "primary": "Cardio",
+    "secondary": [],
+    "tracking_type": "CARDIO"
+  },
+  {
+    "name": "Rowing Machine",
+    "primary": "Cardio",
+    "secondary": [
+      "Back"
+    ],
+    "tracking_type": "CARDIO"
+  },
+  {
+    "name": "Elliptical",
+    "primary": "Cardio",
+    "secondary": [],
+    "tracking_type": "CARDIO"
+  },
+  {
+    "name": "Stair Climber",
+    "primary": "Cardio",
+    "secondary": [
+      "Glutes"
+    ],
+    "tracking_type": "CARDIO"
+  },
+  {
+    "name": "Sled Push",
+    "primary": "Quads",
+    "secondary": [
+      "Glutes",
+      "Calves"
+    ],
+    "tracking_type": "WEIGHT_DISTANCE"
+  },
+  {
+    "name": "Sled Pull",
+    "primary": "Hamstrings",
+    "secondary": [
+      "Back"
+    ],
+    "tracking_type": "WEIGHT_DISTANCE"
+  }
+]

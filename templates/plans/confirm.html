@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}{{ confirm_title }} · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a href="{{ cancel_href }}" class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]">
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">Back</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-md">
+    <div class="ll-card mt-2 md:mt-8">
+      <span class="flex size-12 items-center justify-center rounded-full bg-error/15 text-error" aria-hidden="true">
+        {% icon "triangle-alert" css_class="size-6" %}
+      </span>
+      <h1 class="mt-4 text-xl font-semibold">{{ confirm_title }}</h1>
+      <p class="mt-2 text-[15px] text-base-content/60">{{ confirm_message }}</p>
+
+      <form method="post" action="{{ request.path }}" class="mt-6" hx-boost="false">
+        {% csrf_token %}
+        <input type="hidden" name="confirm" value="1">
+        <button type="submit" class="btn btn-error h-14 min-h-14 w-full text-[17px] font-semibold">
+          {{ confirm_label }}
+        </button>
+      </form>
+      <a href="{{ cancel_href }}" class="btn btn-neutral mt-2 h-12 min-h-12 w-full text-[16px] font-semibold">Cancel</a>
+    </div>
+  </div>
+{% endblock %}

@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}{{ plan.name }} · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a href="{% url 'plans' %}" class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]">
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">Plans</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-[1100px]">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <h1 class="truncate text-2xl font-bold">{{ plan.name }}</h1>
+        <p class="mt-1 text-[13px] text-base-content/60">
+          {{ plan.get_split_type_display }} · Start {{ plan.start_date|date:"M j, Y" }}
+          {% if plan.length_weeks %}· {{ plan.length_weeks }} week{{ plan.length_weeks|pluralize }}{% else %}· Open-ended{% endif %}
+          {% if plan.is_active and week_number %}· Week {{ week_number }}{% endif %}
+        </p>
+      </div>
+      <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold {% if plan.is_active %}bg-success/15 text-success{% elif plan.is_draft %}bg-base-300 text-base-content/70{% else %}bg-base-300 text-base-content/50{% endif %}">
+        {{ plan.get_status_display|upper }}
+      </span>
+    </div>
+
+    {% if plan.is_active %}
+      <p class="mt-3 rounded-xl bg-primary/10 px-3 py-2 text-[13px] text-primary">
+        Edits update today's and future pending workouts. Past and started workouts are untouched.
+      </p>
+    {% endif %}
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-[1fr_20rem]">
+      <section class="ll-card order-2 lg:order-1" aria-labelledby="plan-settings">
+        <h2 id="plan-settings" class="text-lg font-semibold">Plan settings</h2>
+        <form method="post" action="{% url 'plan_detail' plan.pk %}" class="mt-3 space-y-4">
+          {% csrf_token %}
+          {% if plan_form.non_field_errors %}
+            <div class="alert alert-error items-start text-sm" role="alert">
+              <div class="space-y-1">
+                {% for error in plan_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+              </div>
+            </div>
+          {% endif %}
+          <div>
+            <label for="{{ plan_form.name.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ plan_form.name.label }}</label>
+            {{ plan_form.name }}
+            {% for error in plan_form.name.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+          </div>
+          <div>
+            <label for="{{ plan_form.split_type.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ plan_form.split_type.label }}</label>
+            {{ plan_form.split_type }}
+            {% for error in plan_form.split_type.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+          </div>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label for="{{ plan_form.start_date.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ plan_form.start_date.label }}</label>
+              {{ plan_form.start_date }}
+              {% for error in plan_form.start_date.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+            <div>
+              <label for="{{ plan_form.length_weeks.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+                {{ plan_form.length_weeks.label }} <span class="font-normal text-base-content/50">(optional)</span>
+              </label>
+              {{ plan_form.length_weeks }}
+              <p class="mt-1.5 text-[13px] text-base-content/60">{{ plan_form.length_weeks.help_text }}</p>
+              {% for error in plan_form.length_weeks.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+          </div>
+          <button type="submit" class="btn btn-neutral h-12 min-h-12 w-full text-[16px] font-semibold">Save changes</button>
+        </form>
+
+        <div class="mt-4 flex flex-wrap gap-2 border-t border-base-300 pt-4">
+          <form method="post" action="{% url 'plan_duplicate' plan.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost h-11 min-h-11 gap-2 px-3 text-primary">
+              {% icon "copy" css_class="size-4" %}
+              Duplicate
+            </button>
+          </form>
+          {% if not plan.is_active %}
+            <form method="post" action="{% url 'plan_activate' plan.pk %}" hx-boost="false">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-primary h-11 min-h-11 gap-2 px-3">
+                {% icon "play" css_class="size-4" %}
+                Activate
+              </button>
+            </form>
+          {% endif %}
+          {% if not plan.is_archived %}
+            <form method="post" action="{% url 'plan_archive' plan.pk %}" hx-boost="false">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-ghost h-11 min-h-11 gap-2 px-3 text-error">
+                {% icon "archive" css_class="size-4" %}
+                Archive
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </section>
+
+      <aside class="order-1 lg:order-2">
+        {% if plan.is_active %}
+          <div class="ll-card border-primary/30 bg-primary/5">
+            <p class="text-[13px] font-semibold uppercase tracking-wider text-primary">Active plan</p>
+            <p class="mt-2 text-[15px] text-base-content/70">
+              Today shows this plan's schedule. Start a workout from Today to run it set by set.
+            </p>
+            <a href="{% url 'today' %}" class="btn btn-primary mt-3 h-11 min-h-11 w-full">Go to Today</a>
+          </div>
+        {% elif other_active_plan %}
+          <div class="ll-card border-warning/30 bg-warning/5">
+            <p class="text-[13px] font-semibold uppercase tracking-wider text-warning">Heads up</p>
+            <p class="mt-2 text-[15px] text-base-content/70">
+              {{ other_active_plan.name }} is active. Activating this plan will archive it first.
+            </p>
+          </div>
+        {% endif %}
+      </aside>
+    </div>
+
+    <section class="mt-8" aria-labelledby="plan-days">
+      <div class="flex items-center justify-between gap-3 px-1">
+        <h2 id="plan-days" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">
+          Days{% if days %} · {{ days|length }}{% endif %}
+        </h2>
+      </div>
+
+      {% if not days %}
+        <div class="mt-3">
+          {% url 'plan_detail' plan.pk as detail_url %}
+          {% include "components/empty_state.html" with icon="calendar-check" title="No training days yet" message="Add a weekday, then choose exercises and targets for it." action_label="Add your first day" action_href="#add-day" %}
+        </div>
+      {% endif %}
+
+      <div class="mt-3 space-y-4">
+        {% for day in days %}
+          <section id="day-{{ day.pk }}" class="ll-card">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <p class="text-[11px] font-semibold uppercase tracking-wider text-primary">{{ day.weekday_short }}</p>
+                <h3 class="mt-0.5 truncate text-lg font-semibold">{{ day.name }}</h3>
+                {% if day.focus_list %}
+                  <div class="mt-2 flex flex-wrap gap-1.5">
+                    {% for muscle in day.focus_list %}
+                      <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[12px] font-medium text-primary">{{ muscle.name }}</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+              <span class="shrink-0 rounded-full bg-base-300 px-2.5 py-1 text-[11px] font-medium text-base-content/60">
+                {{ day.items_list|length }} exercise{{ day.items_list|length|pluralize }}
+              </span>
+            </div>
+
+            <details class="mt-3 border-t border-base-300 pt-3">
+              <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 text-[14px] font-medium text-primary [&::-webkit-details-marker]:hidden">
+                {% icon "pencil" css_class="size-4" %}
+                Edit day and focus
+              </summary>
+              <form method="post" action="{% url 'plan_day_edit' plan.pk day.pk %}" class="mt-3 space-y-3" hx-boost="false">
+                {% csrf_token %}
+                {% if day.edit_form.non_field_errors %}
+                  <div class="alert alert-error items-start text-sm" role="alert">
+                    <div class="space-y-1">
+                      {% for error in day.edit_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                    </div>
+                  </div>
+                {% endif %}
+                <div>
+                  <label for="{{ day.edit_form.name.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ day.edit_form.name.label }}</label>
+                  {{ day.edit_form.name }}
+                  {% for error in day.edit_form.name.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+                <div>
+                  <label for="{{ day.edit_form.weekday.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ day.edit_form.weekday.label }}</label>
+                  {{ day.edit_form.weekday }}
+                  {% for error in day.edit_form.weekday.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+                <fieldset>
+                  <legend class="mb-1.5 block text-sm font-medium">
+                    {{ day.edit_form.focus_muscles.label }}
+                    <span class="font-normal text-base-content/50">(optional)</span>
+                  </legend>
+                  <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {% for checkbox in day.edit_form.focus_muscles %}
+                      <label class="ll-choice" for="{{ checkbox.id_for_label }}">
+                        {{ checkbox.tag }}
+                        <span>{{ checkbox.choice_label }}</span>
+                      </label>
+                    {% endfor %}
+                  </div>
+                </fieldset>
+                <div class="flex flex-wrap gap-2">
+                  <button type="submit" class="btn btn-neutral h-11 min-h-11 px-4 text-[15px] font-semibold">Save day</button>
+                  <a href="{% url 'plan_item_new' plan.pk day.pk %}" class="btn btn-ghost h-11 min-h-11 gap-1 px-3 text-primary">
+                    {% icon "plus" css_class="size-4" %}
+                    Add exercise
+                  </a>
+                </div>
+              </form>
+              <form method="post" action="{% url 'plan_day_delete' plan.pk day.pk %}" class="mt-2" hx-boost="false">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost h-11 min-h-11 gap-2 px-3 text-error">
+                  {% icon "trash-2" css_class="size-4" %}
+                  Delete day
+                </button>
+              </form>
+            </details>
+
+            {% include "plans/_day_items.html" %}
+          </section>
+        {% endfor %}
+      </div>
+
+      <div id="add-day" class="mt-4">
+        {% if free_weekdays %}
+          <details class="ll-card">
+            <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 text-[15px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
+              {% icon "plus" css_class="size-5" %}
+              Add day
+            </summary>
+            <form method="post" action="{% url 'plan_day_add' plan.pk %}" class="mt-4 space-y-3" hx-boost="false">
+              {% csrf_token %}
+              {% if add_day_form.non_field_errors %}
+                <div class="alert alert-error items-start text-sm" role="alert">
+                  <div class="space-y-1">
+                    {% for error in add_day_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+              <div>
+                <label for="{{ add_day_form.name.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ add_day_form.name.label }}</label>
+                {{ add_day_form.name }}
+                {% for error in add_day_form.name.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+              </div>
+              <div>
+                <label for="{{ add_day_form.weekday.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ add_day_form.weekday.label }}</label>
+                {{ add_day_form.weekday }}
+                {% for error in add_day_form.weekday.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+              </div>
+              <fieldset>
+                <legend class="mb-1.5 block text-sm font-medium">
+                  {{ add_day_form.focus_muscles.label }}
+                  <span class="font-normal text-base-content/50">(optional)</span>
+                </legend>
+                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {% for checkbox in add_day_form.focus_muscles %}
+                    <label class="ll-choice" for="{{ checkbox.id_for_label }}">
+                      {{ checkbox.tag }}
+                      <span>{{ checkbox.choice_label }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </fieldset>
+              <button type="submit" class="btn btn-primary h-12 min-h-12 w-full text-[16px] font-semibold">Add day</button>
+            </form>
+          </details>
+        {% else %}
+          <p class="rounded-xl bg-base-200 px-4 py-3 text-[14px] text-base-content/60">
+            Every weekday already has a training day in this plan.
+          </p>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+{% endblock %}
+
+

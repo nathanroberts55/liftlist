@@ -1,0 +1,159 @@
+{% load icons %}
+{% comment %}
+The interactive part of a Plan Day: the ordered items, superset controls, and
+drag-reorder form. HTMX swaps this whole region so the day header and the
+"Edit day" panel keep their state.
+{% endcomment %}
+<div id="day-items-{{ day.pk }}">
+  {% if day.items_list %}
+    <div class="mt-3 divide-y divide-base-300" data-sortable>
+      {% for item in day.items_list %}
+        <div class="flex items-center gap-1 py-2" data-item-id="{{ item.pk }}">
+          <button
+            type="button"
+            class="hidden h-11 w-8 shrink-0 cursor-grab items-center justify-center text-base-content/30 md:flex"
+            data-drag-handle
+            aria-label="Drag to reorder {{ item.exercise.name }}"
+          >
+            {% icon "grip-vertical" css_class="size-5" %}
+          </button>
+          <input
+            type="checkbox"
+            name="item_ids"
+            value="{{ item.pk }}"
+            form="superset-{{ day.pk }}"
+            class="checkbox checkbox-sm shrink-0"
+            aria-label="Select {{ item.exercise.name }} for a superset"
+          >
+          <div class="min-w-0 flex-1 px-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              {% if item.superset_group %}
+                <span class="rounded bg-accent/15 px-1.5 py-0.5 text-[11px] font-bold text-accent">{{ item.superset_group }}</span>
+              {% endif %}
+              <span class="truncate text-[15px] font-semibold">{{ item.exercise.name }}</span>
+            </div>
+            <p class="mt-0.5 text-[13px] text-base-content/60">
+              {{ item.target_summary }} · {{ item.rest_label }} rest
+              {% if item.notes %}· {{ item.notes }}{% endif %}
+            </p>
+          </div>
+          <div class="flex shrink-0 items-center">
+            <form
+              method="post"
+              action="{% url 'plan_item_move' plan.pk item.pk %}"
+              hx-post="{% url 'plan_item_move' plan.pk item.pk %}"
+              hx-target="#day-items-{{ day.pk }}"
+              hx-swap="outerHTML"
+              hx-disabled-elt="find button"
+            >
+              {% csrf_token %}
+              <input type="hidden" name="direction" value="up">
+              <button
+                id="move-up-{{ item.pk }}"
+                type="submit"
+                class="btn btn-ghost btn-square h-11 min-h-11 w-11"
+                aria-label="Move {{ item.exercise.name }} up"
+                {% if forloop.first %}disabled{% endif %}
+              >
+                {% icon "chevron-up" css_class="size-4" %}
+              </button>
+            </form>
+            <form
+              method="post"
+              action="{% url 'plan_item_move' plan.pk item.pk %}"
+              hx-post="{% url 'plan_item_move' plan.pk item.pk %}"
+              hx-target="#day-items-{{ day.pk }}"
+              hx-swap="outerHTML"
+              hx-disabled-elt="find button"
+            >
+              {% csrf_token %}
+              <input type="hidden" name="direction" value="down">
+              <button
+                id="move-down-{{ item.pk }}"
+                type="submit"
+                class="btn btn-ghost btn-square h-11 min-h-11 w-11"
+                aria-label="Move {{ item.exercise.name }} down"
+                {% if forloop.last %}disabled{% endif %}
+              >
+                {% icon "chevron-down" css_class="size-4" %}
+              </button>
+            </form>
+            <a href="{% url 'plan_item_edit' plan.pk item.pk %}" class="btn btn-ghost btn-square h-11 min-h-11 w-11" aria-label="Edit {{ item.exercise.name }}">
+              {% icon "pencil" css_class="size-4" %}
+            </a>
+            <form method="post" action="{% url 'plan_item_delete' plan.pk item.pk %}" hx-boost="false">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-ghost btn-square h-11 min-h-11 w-11 text-error" aria-label="Delete {{ item.exercise.name }}">
+                {% icon "trash-2" css_class="size-4" %}
+              </button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <form
+      id="superset-{{ day.pk }}"
+      method="post"
+      action="{% url 'plan_day_superset' plan.pk day.pk %}"
+      class="hidden"
+      hx-post="{% url 'plan_day_superset' plan.pk day.pk %}"
+      hx-target="#day-items-{{ day.pk }}"
+      hx-swap="outerHTML"
+      hx-disabled-elt="#superset-button-{{ day.pk }}"
+    >
+      {% csrf_token %}
+    </form>
+    <form
+      id="reorder-{{ day.pk }}"
+      method="post"
+      action="{% url 'plan_day_reorder' plan.pk day.pk %}"
+      data-reorder-form
+      hx-post="{% url 'plan_day_reorder' plan.pk day.pk %}"
+      hx-target="#day-items-{{ day.pk }}"
+      hx-swap="outerHTML"
+    >
+      {% csrf_token %}
+      <input type="hidden" name="ordered_ids" value="">
+    </form>
+
+    <div class="mt-3 flex flex-wrap items-center gap-2 border-t border-base-300 pt-3">
+      <a href="{% url 'plan_item_new' plan.pk day.pk %}" class="btn btn-ghost h-11 min-h-11 gap-1 px-3 text-primary">
+        {% icon "plus" css_class="size-4" %}
+        Add exercise
+      </a>
+      <button id="superset-button-{{ day.pk }}" type="submit" form="superset-{{ day.pk }}" class="btn btn-neutral h-11 min-h-11 gap-2 px-3 text-[15px]">
+        {% icon "check" css_class="size-4" %}
+        Superset selected
+      </button>
+      {% for group in day.superset_groups %}
+        <form
+          method="post"
+          action="{% url 'plan_day_superset_clear' plan.pk day.pk %}"
+          hx-post="{% url 'plan_day_superset_clear' plan.pk day.pk %}"
+          hx-target="#day-items-{{ day.pk }}"
+          hx-swap="outerHTML"
+          hx-disabled-elt="find button"
+        >
+          {% csrf_token %}
+          <input type="hidden" name="group" value="{{ group }}">
+          <button id="clear-superset-{{ day.pk }}-{{ group }}" type="submit" class="btn btn-ghost h-11 min-h-11 gap-1 px-3 text-[14px] text-accent">
+            Clear {{ group }}
+            {% icon "x" css_class="size-4" %}
+          </button>
+        </form>
+      {% endfor %}
+    </div>
+    <p class="mt-2 text-[12px] text-base-content/40">
+      Select two or more consecutive exercises, then tap Superset. Drag to reorder on tablet; use ▲▼ on phone.
+    </p>
+  {% else %}
+    <div class="mt-3 border-t border-base-300 pt-3">
+      <p class="text-[14px] text-base-content/50">No exercises yet.</p>
+      <a href="{% url 'plan_item_new' plan.pk day.pk %}" class="btn btn-ghost mt-2 h-11 min-h-11 gap-1 px-3 text-primary">
+        {% icon "plus" css_class="size-4" %}
+        Add exercise
+      </a>
+    </div>
+  {% endif %}
+</div>

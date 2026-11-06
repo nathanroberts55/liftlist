@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}Library · Lift List{% endblock %}
+
+{% block topbar_actions %}
+  <a
+    href="{% url 'exercise_new' %}"
+    class="btn btn-primary btn-sm h-11 min-h-11 gap-1 px-3 text-[15px]"
+  >
+    {% icon "plus" css_class="size-4" %}
+    New
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-[1100px]">
+    <div class="hidden items-start justify-between gap-4 md:flex">
+      <div>
+        <h1 class="text-2xl font-bold">Library</h1>
+        <p class="mt-1 text-sm text-base-content/60">
+          {% if show_archived %}
+            {{ total_count }} archived exercise{{ total_count|pluralize }}
+          {% else %}
+            {{ total_count }} exercise{{ total_count|pluralize }}
+          {% endif %}
+        </p>
+      </div>
+      <a
+        href="{% url 'exercise_new' %}"
+        class="btn btn-primary h-12 min-h-12 gap-2 px-4 text-[16px] font-semibold"
+      >
+        {% icon "plus" css_class="size-5" %}
+        New exercise
+      </a>
+    </div>
+
+    <form
+      method="get"
+      action="{% url 'library' %}"
+      role="search"
+      class="mt-2 md:mt-5"
+      hx-get="{% url 'library' %}"
+      hx-target="#library-list"
+      hx-swap="outerHTML"
+      hx-trigger="submit, input changed delay:250ms from:input[name='q']"
+      hx-push-url="true"
+    >
+      <input type="hidden" name="muscle" value="{{ muscle_slug }}">
+      {% if show_archived %}<input type="hidden" name="archived" value="1">{% endif %}
+      <div class="relative">
+        <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-base-content/50">
+          {% icon "search" css_class="size-5" %}
+        </span>
+        <input
+          type="search"
+          name="q"
+          value="{{ query }}"
+          class="ll-input pl-11"
+          placeholder="Search exercises"
+          aria-label="Search exercises"
+          autocomplete="off"
+          enterkeyhint="search"
+        >
+      </div>
+    </form>
+
+    <div class="-mx-4 mt-3 overflow-x-auto px-4 pb-1" role="group" aria-label="Filter by muscle group">
+      <div class="flex gap-2">
+        <a
+          href="{% url 'library' %}{% if show_archived %}?archived=1{% endif %}"
+          class="ll-filter-chip"
+          aria-pressed="{% if not muscle_slug %}true{% else %}false{% endif %}"
+        >All</a>
+        {% for muscle in muscles %}
+          <a
+            href="{% url 'library' %}?muscle={{ muscle.slug }}{% if query %}&amp;q={{ query|urlencode }}{% endif %}{% if show_archived %}&amp;archived=1{% endif %}"
+            class="ll-filter-chip"
+            aria-pressed="{% if muscle_slug == muscle.slug %}true{% else %}false{% endif %}"
+          >{{ muscle.name }}</a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="mt-3 flex items-center justify-between gap-3">
+      {% if show_archived %}
+        <p class="text-sm text-base-content/60">Archived exercises are hidden from plans and pickers.</p>
+        <a
+          href="{% url 'library' %}{% if query %}?q={{ query|urlencode }}{% endif %}{% if muscle_slug %}{% if query %}&amp;{% else %}?{% endif %}muscle={{ muscle_slug }}{% endif %}"
+          class="btn btn-ghost btn-sm h-11 min-h-11 shrink-0 text-primary"
+        >Back to library</a>
+      {% elif archived_count %}
+        <a
+          href="{% url 'library' %}?archived=1{% if query %}&amp;q={{ query|urlencode }}{% endif %}{% if muscle_slug %}&amp;muscle={{ muscle_slug }}{% endif %}"
+          class="btn btn-ghost btn-sm h-11 min-h-11 gap-2 px-2 text-base-content/60"
+        >
+          {% icon "archive" css_class="size-4" %}
+          Archived ({{ archived_count }})
+        </a>
+      {% endif %}
+    </div>
+
+    {% include "exercises/_list.html" %}
+  </div>
+{% endblock %}

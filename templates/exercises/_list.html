@@ -1,0 +1,67 @@
+{% load icons %}
+<div id="library-list">
+  {% if groups %}
+    <div class="mt-4 space-y-6 md:mt-6">
+      {% for group in groups %}
+        <section aria-labelledby="muscle-{{ group.muscle.slug }}">
+          <div class="flex items-baseline justify-between gap-3 px-1">
+            <h2
+              id="muscle-{{ group.muscle.slug }}"
+              class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50"
+            >{{ group.muscle.name }}</h2>
+            <span class="text-[13px] text-base-content/40">{{ group.exercises|length }}</span>
+          </div>
+
+          <div class="ll-card mt-2 divide-y divide-base-300 overflow-hidden p-0">
+            {% for exercise in group.exercises %}
+              <a
+                href="{% url 'exercise_detail' exercise.pk %}"
+                class="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-base-300/60 active:bg-base-300"
+              >
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[16px] font-semibold">{{ exercise.name }}</span>
+                  <span class="mt-0.5 flex flex-wrap items-center gap-x-2 text-[13px] text-base-content/50">
+                    {% with secondary=exercise.secondary_muscles.all %}
+                      {% if secondary %}
+                        <span class="truncate">
+                          {% for muscle in secondary %}{{ muscle.name }}{% if not forloop.last %} · {% endif %}{% endfor %}
+                        </span>
+                      {% endif %}
+                    {% endwith %}
+                    {% if show_archived %}
+                      <span class="rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium text-warning">Archived</span>
+                    {% endif %}
+                  </span>
+                </span>
+                <span class="shrink-0 rounded-full bg-base-300 px-2.5 py-1 text-[11px] font-medium text-base-content/70 sm:text-[12px]">
+                  {{ exercise.get_tracking_type_display }}
+                </span>
+                {% icon "chevron-right" css_class="hidden size-4 shrink-0 text-base-content/30 sm:block" %}
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+      {% endfor %}
+    </div>
+  {% elif has_filters %}
+    <div class="ll-card mt-6 flex flex-col items-center px-6 py-10 text-center">
+      <span class="flex size-14 items-center justify-center rounded-full bg-base-300 text-primary" aria-hidden="true">
+        {% icon "search" css_class="size-7" %}
+      </span>
+      <h2 class="mt-4 text-xl font-semibold">No matches</h2>
+      <p class="mt-2 max-w-sm text-[15px] text-base-content/60">
+        No exercises match “{{ query }}{% if muscle_slug %}” in this muscle group{% endif %}.
+      </p>
+      <div class="mt-6 w-full max-w-xs">
+        <a href="{% url 'library' %}{% if show_archived %}?archived=1{% endif %}" class="btn btn-neutral h-12 min-h-12 w-full text-[16px] font-semibold">
+          Clear filters
+        </a>
+      </div>
+    </div>
+  {% else %}
+    <div class="mt-6">
+      {% url 'exercise_new' as new_url %}
+      {% include "components/empty_state.html" with icon="library" title="No exercises yet" message="Add your own exercise to get started." action_label="Add exercise" action_href=new_url %}
+    </div>
+  {% endif %}
+</div>

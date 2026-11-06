@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Lift List">
+  <rect width="64" height="64" rx="14" fill="#2B7FFF"/>
+  <g fill="#FFFFFF">
+    <rect x="15" y="18" width="4" height="12" rx="1.5"/>
+    <rect x="10" y="20" width="3" height="8" rx="1.5"/>
+    <rect x="45" y="18" width="4" height="12" rx="1.5"/>
+    <rect x="51" y="20" width="3" height="8" rx="1.5"/>
+    <rect x="17" y="23" width="30" height="3" rx="1.5"/>
+    <path d="M20 38.5a2.5 2.5 0 0 1 3.6-.2l4.2 4.3 10.7-11.2a2.6 2.6 0 0 1 3.8 3.5L30.6 47.7a2.6 2.6 0 0 1-3.8 0l-6.1-6.2a2.6 2.6 0 0 1-.1-3z"/>
+  </g>
+</svg>

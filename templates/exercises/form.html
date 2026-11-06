@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}{% if is_edit %}Edit exercise{% else %}New exercise{% endif %} · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a
+    href="{% if is_edit %}{% url 'exercise_detail' exercise.pk %}{% else %}{% url 'library' %}{% endif %}"
+    class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]"
+  >
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">{% if is_edit %}{{ exercise.name }}{% else %}Library{% endif %}</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-xl">
+    <h1 class="hidden text-2xl font-bold md:block">
+      {% if is_edit %}Edit exercise{% else %}New exercise{% endif %}
+    </h1>
+    <p class="mt-1 hidden text-sm text-base-content/60 md:block">
+      {% if is_edit %}
+        Seeded exercises can't be edited, but your own can.
+      {% else %}
+        Add a movement that isn't in the built-in library.
+      {% endif %}
+    </p>
+
+    <form method="post" class="mt-4 space-y-5 md:mt-6">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error items-start text-sm" role="alert">
+          <div class="space-y-1">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="{{ form.name.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+          {{ form.name.label }}
+        </label>
+        {{ form.name }}
+        {% for error in form.name.errors %}
+          <p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <div>
+        <label for="{{ form.primary_muscle.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+          {{ form.primary_muscle.label }}
+        </label>
+        {{ form.primary_muscle }}
+        {% for error in form.primary_muscle.errors %}
+          <p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <div>
+        <label for="{{ form.tracking_type.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+          {{ form.tracking_type.label }}
+        </label>
+        {{ form.tracking_type }}
+        {% for error in form.tracking_type.errors %}
+          <p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <fieldset>
+        <legend class="mb-1.5 block text-sm font-medium">
+          {{ form.secondary_muscles.label }}
+          <span class="font-normal text-base-content/50">(optional)</span>
+        </legend>
+        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {% for checkbox in form.secondary_muscles %}
+            <label class="ll-choice" for="{{ checkbox.id_for_label }}">
+              {{ checkbox.tag }}
+              <span>{{ checkbox.choice_label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        {% for error in form.secondary_muscles.errors %}
+          <p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>
+        {% endfor %}
+      </fieldset>
+
+      <div>
+        <label for="{{ form.notes.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+          {{ form.notes.label }}
+          <span class="font-normal text-base-content/50">(optional)</span>
+        </label>
+        {{ form.notes }}
+        {% for error in form.notes.errors %}
+          <p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="btn btn-primary h-14 min-h-14 w-full text-[17px] font-semibold">
+        {% if is_edit %}Save changes{% else %}Add exercise{% endif %}
+      </button>
+    </form>
+  </div>
+{% endblock %}

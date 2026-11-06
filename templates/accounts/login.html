@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}Log in · Lift List{% endblock %}
+
+{% block content %}
+  <div class="w-full max-w-sm">
+    <div class="text-center">
+      <p class="ll-wordmark text-2xl">
+        <span class="text-primary">L</span>IFT <span class="text-primary">L</span>IST
+      </p>
+      <p class="mt-2 text-sm text-base-content/60">Sign in to your training log.</p>
+    </div>
+
+    {% if form.non_field_errors %}
+      <div class="alert alert-error mt-6 text-[15px]" role="alert">
+        {% icon "triangle-alert" css_class="size-5 shrink-0" %}
+        <span>
+          {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+        </span>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{% url 'login' %}" class="mt-6 space-y-5" novalidate>
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next|default:'' }}">
+
+      <div>
+        <label for="{{ form.username.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+          Username
+        </label>
+        <input
+          type="text"
+          name="username"
+          id="{{ form.username.id_for_label }}"
+          value="{{ form.username.value|default:'' }}"
+          class="ll-input"
+          autocomplete="username"
+          autocapitalize="none"
+          autocorrect="off"
+          spellcheck="false"
+          required
+          autofocus
+        >
+        {% for error in form.username.errors %}
+          <p class="mt-1.5 text-sm text-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <div>
+        <label for="{{ form.password.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+          Password
+        </label>
+        <input
+          type="password"
+          name="password"
+          id="{{ form.password.id_for_label }}"
+          class="ll-input"
+          autocomplete="current-password"
+          required
+        >
+        {% for error in form.password.errors %}
+          <p class="mt-1.5 text-sm text-error">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <button
+        type="submit"
+        class="btn btn-primary h-14 min-h-14 w-full text-[17px] font-semibold"
+      >
+        Log in
+      </button>
+    </form>
+
+    <p class="mt-6 text-center text-[13px] text-base-content/50">
+      Accounts are created by the administrator. There is no sign-up.
+    </p>
+  </div>
+{% endblock %}

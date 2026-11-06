@@ -1,0 +1,65 @@
+{% load icons %}
+{% comment %}
+Rest screen. It is server-rendered on top of the next set screen, so the next
+form is already in the DOM when the countdown ends. Alpine only runs the clock;
+with JavaScript off the server redirects straight to the next set screen and
+this overlay is never rendered (rest_seconds is 0 on a normal GET).
+{% endcomment %}
+<div
+  x-show="resting"
+  class="fixed inset-0 z-50 overflow-y-auto bg-base-100/98 backdrop-blur"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="rest-title"
+>
+  <div class="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col items-center justify-center px-6 pb-10 pt-10">
+    <p id="rest-title" class="text-[13px] font-semibold uppercase tracking-[0.24em] text-base-content/50">Rest</p>
+    <p class="mt-2 text-7xl font-bold tabular-nums" x-text="label">{{ rest_seconds }}s</p>
+    <div
+      class="mt-6 h-2 w-full overflow-hidden rounded-full bg-base-300"
+      role="progressbar"
+      aria-label="Rest time remaining"
+      aria-valuemin="0"
+      :aria-valuemax="total"
+      :aria-valuenow="remaining"
+    >
+      <div class="h-full rounded-full bg-primary transition-[width] duration-300" :style="'width: ' + progress + '%'"></div>
+    </div>
+
+    <div class="mt-8 grid w-full grid-cols-3 gap-2">
+      <button type="button" class="btn btn-neutral h-14 min-h-14 text-[15px] font-semibold" @click="adjust(-15)">−15s</button>
+      <button id="rest-skip" type="button" class="btn btn-primary h-14 min-h-14 text-[16px] font-semibold" @click="finish()">Skip</button>
+      <button type="button" class="btn btn-neutral h-14 min-h-14 text-[15px] font-semibold" @click="adjust(15)">+15s</button>
+    </div>
+
+    <p class="mt-4 min-h-5 text-center text-[13px] text-base-content/50" aria-live="polite" x-text="announcement"></p>
+
+    <div class="mt-8 w-full rounded-2xl border border-base-300 bg-base-200 p-4 text-left">
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-base-content/50">Up next</p>
+      <p class="mt-1 text-lg font-semibold">
+        {{ session_exercise.exercise.name }}
+        {% if step.is_superset %}
+          <span class="ml-1 rounded bg-accent/15 px-1.5 py-0.5 text-[11px] font-bold text-accent">{{ step.superset_label }}</span>
+        {% endif %}
+      </p>
+      <p class="mt-0.5 text-[14px] text-base-content/60">
+        {% if step.is_superset %}Round {{ step.round_number }} of {{ step.total_rounds }} · {% endif %}
+        Set {{ step.set_number }} of {{ session_exercise.target_sets }} · {{ session_exercise.goal_label }}
+      </p>
+      <p class="mt-1 text-[13px] text-base-content/50">
+        Pre-filled:
+        {% if values.weight_lb %}{{ values.weight_lb }} lb{% if values.reps %} × {{ values.reps }}{% endif %}{% elif values.reps %}{{ values.reps }} reps{% elif values.duration %}{{ values.duration }}{% if values.distance_mi %} · {{ values.distance_mi }} mi{% endif %}{% elif values.duration_seconds %}{{ values.duration_seconds }}s{% else %}tap to enter{% endif %}
+      </p>
+    </div>
+
+    <a
+      href="{% url 'session_run' session.pk %}"
+      hx-get="{% url 'session_run' session.pk %}"
+      hx-target="#runner"
+      hx-swap="outerHTML"
+      class="mt-6 text-[13px] text-base-content/40 underline-offset-4 hover:underline"
+    >
+      Back to set screen
+    </a>
+  </div>
+</div>

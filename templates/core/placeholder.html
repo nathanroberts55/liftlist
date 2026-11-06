@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} · Lift List{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-[1100px]">
+    <div class="md:mb-6">
+      {% include "components/empty_state.html" with icon=icon_name title=title message=message %}
+    </div>
+  </div>
+{% endblock %}

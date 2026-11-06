@@ -1,0 +1,26 @@
+{% load icons %}
+{% comment %}
+Button component.
+Params: label, variant (primary|secondary|ghost|danger), href (optional),
+type (default button), icon (optional), full_width (default true), id/name/value (optional).
+{% endcomment %}
+{% if href %}
+  <a
+    href="{{ href }}"
+    class="btn {% if variant == 'secondary' %}btn-neutral{% elif variant == 'ghost' %}btn-ghost text-primary{% elif variant == 'danger' %}btn-ghost text-error{% else %}btn-primary{% endif %} h-12 min-h-12 gap-2 text-[16px] font-semibold{% if full_width is not False %} w-full{% endif %}"
+  >
+    {% if icon %}{% icon icon css_class="size-5" %}{% endif %}
+    {{ label }}
+  </a>
+{% else %}
+  <button
+    type="{{ type|default:'button' }}"
+    {% if id %}id="{{ id }}"{% endif %}
+    {% if name %}name="{{ name }}"{% endif %}
+    {% if value %}value="{{ value }}"{% endif %}
+    class="btn {% if variant == 'secondary' %}btn-neutral{% elif variant == 'ghost' %}btn-ghost text-primary{% elif variant == 'danger' %}btn-ghost text-error{% else %}btn-primary{% endif %} {% if variant == 'primary' or not variant %}h-14 min-h-14 text-[17px]{% else %}h-12 min-h-12 text-[16px]{% endif %} gap-2 font-semibold{% if full_width is not False %} w-full{% endif %}"
+  >
+    {% if icon %}{% icon icon css_class="size-5" %}{% endif %}
+    {{ label }}
+  </button>
+{% endif %}

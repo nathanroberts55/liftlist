@@ -1,0 +1,86 @@
+{% load icons %}
+{% comment %}
+The ⋮ menu. Links use HTMX to swap only #runner; without JavaScript they load
+the same panel as a full page. Destructive discard keeps its confirmation page.
+{% endcomment %}
+<section class="ll-card" aria-labelledby="runner-menu">
+  <div class="flex items-center justify-between gap-2">
+    <h1 id="runner-menu" class="text-lg font-semibold">Workout menu</h1>
+    <a
+      href="{% url 'session_run' session.pk %}"
+      hx-get="{% url 'session_run' session.pk %}"
+      hx-target="#runner"
+      hx-swap="outerHTML"
+      class="btn btn-ghost btn-square h-11 min-h-11 w-11"
+      aria-label="Close menu"
+    >
+      {% icon "x" css_class="size-5" %}
+    </a>
+  </div>
+
+  {% if completed %}
+    <p class="mt-2 text-[14px] text-base-content/60">This workout is finished.</p>
+    <a href="{% url 'today' %}" class="btn btn-primary mt-4 h-12 min-h-12 w-full text-[16px] font-semibold">Back to Today</a>
+  {% else %}
+    <div class="mt-2 divide-y divide-base-300">
+      <a
+        href="{% url 'session_run' session.pk %}?panel=reorder"
+        hx-get="{% url 'session_run' session.pk %}?panel=reorder"
+        hx-target="#runner"
+        hx-swap="outerHTML"
+        class="flex min-h-12 items-center gap-3 py-2"
+      >
+        <span class="text-base-content/50" aria-hidden="true">{% icon "arrow-up-down" css_class="size-5" %}</span>
+        <span class="min-w-0 flex-1 text-[15px] font-medium">Reorder exercises</span>
+        {% icon "chevron-right" css_class="size-4 shrink-0 text-base-content/30" %}
+      </a>
+      <a
+        href="{% url 'session_run' session.pk %}?panel=jump"
+        hx-get="{% url 'session_run' session.pk %}?panel=jump"
+        hx-target="#runner"
+        hx-swap="outerHTML"
+        class="flex min-h-12 items-center gap-3 py-2"
+      >
+        <span class="text-base-content/50" aria-hidden="true">{% icon "skip-forward" css_class="size-5" %}</span>
+        <span class="min-w-0 flex-1 text-[15px] font-medium">Jump to exercise</span>
+        {% icon "chevron-right" css_class="size-4 shrink-0 text-base-content/30" %}
+      </a>
+      <a
+        href="{% url 'session_run' session.pk %}?panel=add"
+        hx-get="{% url 'session_run' session.pk %}?panel=add"
+        hx-target="#runner"
+        hx-swap="outerHTML"
+        class="flex min-h-12 items-center gap-3 py-2"
+      >
+        <span class="text-base-content/50" aria-hidden="true">{% icon "plus" css_class="size-5" %}</span>
+        <span class="min-w-0 flex-1 text-[15px] font-medium">Add exercise</span>
+        {% icon "chevron-right" css_class="size-4 shrink-0 text-base-content/30" %}
+      </a>
+      {% if step %}
+        <form method="post" action="{% url 'session_skip_exercise' session.pk %}" hx-post="{% url 'session_skip_exercise' session.pk %}" hx-target="#runner" hx-swap="outerHTML" hx-disabled-elt="find button">
+          {% csrf_token %}
+          <input type="hidden" name="exercise" value="{{ session_exercise.pk }}">
+          <button type="submit" class="flex min-h-12 w-full items-center gap-3 py-2 text-left">
+            <span class="text-base-content/50" aria-hidden="true">{% icon "skip-forward" css_class="size-5" %}</span>
+            <span class="min-w-0 flex-1 text-[15px] font-medium">Skip this exercise</span>
+          </button>
+        </form>
+      {% endif %}
+      <form method="post" action="{% url 'session_finish' session.pk %}" hx-post="{% url 'session_finish' session.pk %}" hx-target="#runner" hx-swap="outerHTML" hx-disabled-elt="find button">
+        {% csrf_token %}
+        <button type="submit" class="flex min-h-12 w-full items-center gap-3 py-2 text-left">
+          <span class="text-primary" aria-hidden="true">{% icon "check" css_class="size-5" %}</span>
+          <span class="min-w-0 flex-1 text-[15px] font-medium">Finish workout</span>
+        </button>
+      </form>
+      <form method="post" action="{% url 'session_discard' session.pk %}" hx-boost="false">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="runner">
+        <button type="submit" class="flex min-h-12 w-full items-center gap-3 py-2 text-left">
+          <span class="text-error" aria-hidden="true">{% icon "trash-2" css_class="size-5" %}</span>
+          <span class="min-w-0 flex-1 text-[15px] font-medium text-error">Discard workout</span>
+        </button>
+      </form>
+    </div>
+  {% endif %}
+</section>

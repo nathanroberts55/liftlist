@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}{{ exercise.name }} · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a
+    href="{% url 'library' %}"
+    class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]"
+  >
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">{{ exercise.name }}</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-3xl">
+    <div class="hidden md:block">
+      <a href="{% url 'library' %}" class="btn btn-ghost h-11 min-h-11 -ml-2 gap-1 px-2 text-[15px] text-base-content/60">
+        {% icon "arrow-left" css_class="size-5" %}
+        Library
+      </a>
+      <h1 class="mt-2 text-2xl font-bold">{{ exercise.name }}</h1>
+    </div>
+
+    <div class="ll-card mt-2 md:mt-5">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="rounded-full bg-base-300 px-2.5 py-1 text-[12px] font-medium">
+          {{ exercise.primary_muscle.name }}
+        </span>
+        {% for name in secondary_names %}
+          <span class="rounded-full bg-base-300/60 px-2.5 py-1 text-[12px] font-medium text-base-content/70">
+            {{ name }}
+          </span>
+        {% endfor %}
+        <span class="rounded-full bg-base-300/60 px-2.5 py-1 text-[12px] font-medium text-base-content/70">
+          {% if exercise.is_seeded %}Seeded{% else %}Custom{% endif %}
+        </span>
+        {% if is_archived %}
+          <span class="rounded-full bg-warning/15 px-2.5 py-1 text-[12px] font-medium text-warning">
+            Archived
+          </span>
+        {% endif %}
+      </div>
+
+      <p class="mt-4 text-[15px]">
+        <span class="text-base-content/60">Tracking</span>
+        <span class="ml-1 font-medium">{{ exercise.get_tracking_type_display }}</span>
+      </p>
+
+      {% if exercise.notes %}
+        <div class="mt-4 border-t border-base-300 pt-4">
+          <h2 class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Notes</h2>
+          <p class="mt-1 whitespace-pre-line text-[15px] text-base-content/80">{{ exercise.notes }}</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <section class="mt-6" aria-labelledby="records-heading">
+      <h2 id="records-heading" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">
+        Personal records
+      </h2>
+      <div class="ll-card mt-2">
+        <p class="text-[15px] text-base-content/60">
+          Heaviest weight and rep PRs appear here after your first workout.
+        </p>
+      </div>
+    </section>
+
+    <section class="mt-6" aria-labelledby="recent-heading">
+      <h2 id="recent-heading" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">
+        Recent sessions
+      </h2>
+      <div class="ll-card mt-2 flex flex-col items-center px-6 py-8 text-center">
+        <span class="flex size-12 items-center justify-center rounded-full bg-base-300 text-primary" aria-hidden="true">
+          {% icon "history" css_class="size-6" %}
+        </span>
+        <p class="mt-3 max-w-sm text-[15px] text-base-content/60">
+          No sessions yet. Workout history arrives in a later milestone.
+        </p>
+      </div>
+    </section>
+
+    <div class="mt-8 space-y-3 pb-4">
+      {% if is_archived %}
+        <form method="post" action="{% url 'exercise_restore' exercise.pk %}">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-primary h-14 min-h-14 w-full gap-2 text-[17px] font-semibold">
+            {% icon "archive-restore" css_class="size-5" %}
+            Restore exercise
+          </button>
+        </form>
+      {% else %}
+        {% if exercise.is_custom %}
+          <a
+            href="{% url 'exercise_edit' exercise.pk %}"
+            class="btn btn-neutral h-12 min-h-12 w-full gap-2 text-[16px] font-semibold"
+          >
+            {% icon "pencil" css_class="size-5" %}
+            Edit
+          </a>
+        {% endif %}
+
+        <div x-data="{ confirmArchive: false }">
+          <button
+            type="button"
+            @click="confirmArchive = true"
+            class="btn btn-ghost h-12 min-h-12 w-full gap-2 text-[16px] font-semibold text-error"
+          >
+            {% icon "archive" css_class="size-5" %}
+            Archive
+          </button>
+
+          <div
+            x-show="confirmArchive"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="archive-title"
+            @click.self="confirmArchive = false"
+          >
+            <div class="ll-card w-full max-w-sm">
+              <h2 id="archive-title" class="text-lg font-semibold">Archive {{ exercise.name }}?</h2>
+              <p class="mt-2 text-sm text-base-content/60">
+                It will be hidden from the library and exercise pickers. Past workouts keep their history.
+              </p>
+              <div class="mt-5 flex gap-3">
+                <button
+                  type="button"
+                  @click="confirmArchive = false"
+                  class="btn btn-neutral h-12 min-h-12 flex-1 text-[16px] font-semibold"
+                >Cancel</button>
+                <form method="post" action="{% url 'exercise_archive' exercise.pk %}" class="flex-1">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-error h-12 min-h-12 w-full text-[16px] font-semibold">
+                    Archive
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}

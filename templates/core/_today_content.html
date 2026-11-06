@@ -1,0 +1,193 @@
+{% load icons %}
+{% comment %}
+Today's dynamic content. Marking a workout missed changes the card, the
+catch-up list, and the week strip, so all three live in one swap target.
+{% endcomment %}
+<div id="today-content">
+  {% if in_progress_session %}
+    <section class="ll-card mt-5 border-primary/40 bg-primary/5" aria-labelledby="resume-workout">
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-primary">Workout in progress</p>
+      <h2 id="resume-workout" class="mt-0.5 truncate text-xl font-bold">{{ in_progress_session.title }}</h2>
+      <p class="mt-1 text-[13px] text-base-content/60">
+        {{ in_progress_session.progress_label }}
+        {% if in_progress_session.started_at %} · Started {{ in_progress_session.started_at|date:"g:i A" }}{% endif %}
+      </p>
+      <a href="{% url 'session_run' in_progress_session.pk %}" class="btn btn-primary mt-3 h-12 min-h-12 w-full text-[16px] font-semibold">Resume workout</a>
+      <div class="mt-2 grid grid-cols-2 gap-2">
+        <form method="post" action="{% url 'session_finish' in_progress_session.pk %}" hx-boost="false">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="today">
+          <button type="submit" class="btn btn-neutral h-11 min-h-11 w-full text-[14px] font-semibold">Finish</button>
+        </form>
+        <form method="post" action="{% url 'session_discard' in_progress_session.pk %}" hx-boost="false">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="today">
+          <button type="submit" class="btn btn-ghost h-11 min-h-11 w-full text-[14px] font-semibold text-error">Discard</button>
+        </form>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if not plan %}
+    <div class="mt-6">
+      {% url 'plan_new' as new_plan_url %}
+      {% include "components/empty_state.html" with icon="calendar-check" title="No active plan" message="Create a plan, add training days, and activate it to see today's workout." action_label="Create plan" action_href=new_plan_url %}
+    </div>
+  {% else %}
+    {% if today_workout %}
+      <section class="ll-card mt-5" aria-labelledby="today-workout">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <p class="text-[11px] font-semibold uppercase tracking-wider text-primary">{{ today_workout.plan_day.weekday_short }} · Today</p>
+            <h2 id="today-workout" class="mt-0.5 truncate text-xl font-bold">{{ today_workout.plan_day.name }}</h2>
+          </div>
+          {% if today_workout.status == "MISSED" %}
+            <span class="shrink-0 rounded-full bg-error/15 px-2.5 py-1 text-[11px] font-semibold text-error">MISSED</span>
+          {% elif today_workout.status == "COMPLETED" %}
+            <span class="shrink-0 rounded-full bg-success/15 px-2.5 py-1 text-[11px] font-semibold text-success">DONE</span>
+          {% elif today_workout.status == "MADE_UP" %}
+            <span class="shrink-0 rounded-full bg-accent/15 px-2.5 py-1 text-[11px] font-semibold text-accent">MADE UP</span>
+          {% else %}
+            <span class="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">PENDING</span>
+          {% endif %}
+        </div>
+
+        {% if today_items %}
+          <div class="mt-4 divide-y divide-base-300">
+            {% for item in today_items %}
+              <div class="flex items-start gap-2 py-2.5">
+                {% if item.superset_group %}
+                  <span class="mt-0.5 shrink-0 rounded bg-accent/15 px-1.5 py-0.5 text-[11px] font-bold text-accent">{{ item.superset_group }}</span>
+                {% endif %}
+                <span class="min-w-0 flex-1">
+                  <span class="flex items-center gap-1.5">
+                    <span class="truncate text-[15px] font-semibold">{{ item.exercise.name }}</span>
+                    {% if item.increase %}
+                      <span class="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-success/15 px-1.5 py-0.5 text-[10px] font-semibold text-success">
+                        {% icon "trending-up" css_class="size-3" %}
+                        Increase
+                      </span>
+                    {% endif %}
+                  </span>
+                  <span class="mt-0.5 block text-[13px] text-base-content/60">{{ item.target_summary }} · {{ item.rest_label }} rest</span>
+                </span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="mt-4 text-[15px] text-base-content/60">This day has no exercises yet.</p>
+        {% endif %}
+
+        <div class="mt-4 rounded-xl bg-base-300/60 px-3 py-2.5">
+          {% if today_workout.status == "MISSED" %}
+            <p class="text-[13px] text-base-content/60">Marked missed. Starting it now still records the workout.</p>
+            {% if not in_progress_session and today_items %}
+              <form method="post" action="{% url 'scheduled_start' today_workout.pk %}" hx-boost="false" class="mt-2">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary h-12 min-h-12 w-full text-[16px] font-semibold">Start catch-up</button>
+              </form>
+            {% endif %}
+          {% elif today_workout.status == "COMPLETED" or today_workout.status == "MADE_UP" %}
+            <p class="text-[13px] text-base-content/60">Nice work. This workout is saved.</p>
+            {% if today_workout.session %}
+              <a href="{% url 'session_run' today_workout.session.pk %}" class="btn btn-ghost mt-1 h-11 min-h-11 w-full text-[14px] text-primary">View workout</a>
+            {% endif %}
+          {% elif in_progress_session %}
+            <p class="text-[13px] text-base-content/60">Finish or discard your current workout before starting another.</p>
+          {% else %}
+            {% if today_items %}
+              <form method="post" action="{% url 'scheduled_start' today_workout.pk %}" hx-boost="false" class="mt-0.5">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary h-12 min-h-12 w-full text-[16px] font-semibold">Start workout</button>
+              </form>
+            {% else %}
+              <a href="{% url 'plan_detail' plan.pk %}#day-{{ today_workout.plan_day.pk }}" class="btn btn-neutral h-11 min-h-11 w-full text-[14px] font-semibold">Add exercises to this day</a>
+            {% endif %}
+            <form
+              method="post"
+              action="{% url 'scheduled_mark_missed' today_workout.pk %}"
+              class="mt-1"
+              hx-post="{% url 'scheduled_mark_missed' today_workout.pk %}"
+              hx-target="#today-content"
+              hx-swap="outerHTML"
+              hx-disabled-elt="find button"
+            >
+              {% csrf_token %}
+              <button id="mark-missed" type="submit" class="btn btn-ghost h-11 min-h-11 w-full gap-1 px-2 text-[14px] text-base-content/60">
+                {% icon "x" css_class="size-4" %}
+                Mark as missed
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </section>
+    {% else %}
+      <section class="ll-card mt-5 flex items-center gap-3" aria-labelledby="rest-day">
+        <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-base-300 text-success" aria-hidden="true">
+          {% icon "check" css_class="size-5" %}
+        </span>
+        <div>
+          <h2 id="rest-day" class="text-lg font-semibold">Rest day</h2>
+          <p class="mt-0.5 text-[14px] text-base-content/60">No workout scheduled today.</p>
+        </div>
+      </section>
+    {% endif %}
+
+    {% if catch_up %}
+      <section class="mt-6" aria-labelledby="catch-up">
+        <h2 id="catch-up" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Catch up</h2>
+        <div class="ll-card mt-2 divide-y divide-base-300 overflow-hidden p-0">
+          {% for workout in catch_up %}
+            <div class="flex items-center gap-3 px-4 py-3">
+              <span class="size-2.5 shrink-0 rounded-full bg-error" aria-hidden="true"></span>
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-[15px] font-semibold">{{ workout.plan_day.name }}</p>
+                <p class="mt-0.5 text-[13px] text-base-content/50">{{ workout.scheduled_date|date:"D, M j" }} · Missed</p>
+              </div>
+              {% if in_progress_session %}
+                <span class="shrink-0 rounded-full bg-base-300 px-2 py-1 text-[11px] text-base-content/50">Waiting</span>
+              {% else %}
+                <form method="post" action="{% url 'scheduled_start' workout.pk %}" hx-boost="false">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-neutral h-11 min-h-11 px-3 text-[14px] font-semibold">Start</button>
+                </form>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <p class="mt-2 px-1 text-[12px] text-base-content/40">
+          Starting a missed workout records it as made up.
+        </p>
+      </section>
+    {% endif %}
+
+    <section class="mt-6" aria-labelledby="this-week">
+      <h2 id="this-week" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">This week</h2>
+      <div class="ll-card mt-2">
+        <div class="flex items-start justify-between gap-1">
+          {% for day in week_days %}
+            <div class="flex min-w-0 flex-1 flex-col items-center gap-1.5" aria-label="{{ day.date|date:'D, M j' }}{% if day.status %} · {{ day.status|title }}{% else %} · Rest{% endif %}">
+              <span class="text-[11px] font-semibold {% if day.is_today %}text-primary{% else %}text-base-content/50{% endif %}">{{ day.letter }}</span>
+              <span class="flex size-7 items-center justify-center rounded-full {% if day.is_today %}ring-2 ring-primary ring-offset-2 ring-offset-base-200{% endif %}">
+                {% if day.status == "COMPLETED" %}
+                  <span class="size-2.5 rounded-full bg-success"></span>
+                {% elif day.status == "MISSED" %}
+                  <span class="size-2.5 rounded-full bg-error"></span>
+                {% elif day.status == "MADE_UP" %}
+                  <span class="size-2.5 rounded-full border-2 border-accent"></span>
+                {% elif day.status == "PENDING" %}
+                  <span class="size-2.5 rounded-full border border-base-content/40"></span>
+                {% else %}
+                  <span class="size-2.5 rounded-full bg-base-300"></span>
+                {% endif %}
+              </span>
+              <span class="max-w-full truncate text-[10px] {% if day.is_today %}font-semibold text-primary{% else %}text-base-content/40{% endif %}">
+                {% if day.workout %}{{ day.workout.plan_day.weekday_short }}{% else %}—{% endif %}
+              </span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+</div>

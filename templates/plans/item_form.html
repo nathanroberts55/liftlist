@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}{% if is_edit %}Edit exercise{% else %}Add exercise{% endif %} · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a href="{% url 'plan_detail' plan.pk %}" class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]">
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">{{ plan.name }}</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-[1100px]">
+    <div>
+      <p class="text-[11px] font-semibold uppercase tracking-wider text-primary">{{ day.weekday_short }} · {{ day.name }}</p>
+      <h1 class="mt-0.5 text-2xl font-bold">{% if is_edit %}Edit exercise{% else %}Add exercise{% endif %}</h1>
+      {% if focus_muscles %}
+        <p class="mt-1 text-[13px] text-base-content/60">
+          Focus first:
+          {% for muscle in focus_muscles %}{{ muscle.name }}{% if not forloop.last %} · {% endif %}{% endfor %}
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-[22rem_1fr]">
+      {% if not is_edit %}
+        <aside class="order-2 lg:order-1">
+          <div class="ll-card lg:sticky lg:top-24">
+            <h2 class="text-lg font-semibold">Exercise picker</h2>
+            <form
+              method="get"
+              action="{% url 'plan_item_new' plan.pk day.pk %}"
+              role="search"
+              class="mt-3"
+              hx-get="{% url 'plan_picker' plan.pk %}"
+              hx-target="#picker-results"
+              hx-swap="outerHTML"
+              hx-trigger="submit, input changed delay:250ms from:input[name='q']"
+              hx-include="this"
+            >
+              <input type="hidden" name="day" value="{{ day.pk }}">
+              <div class="relative">
+                <span class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-base-content/50">
+                  {% icon "search" css_class="size-5" %}
+                </span>
+                <input
+                  type="search"
+                  name="q"
+                  value="{{ query }}"
+                  class="ll-input pl-11"
+                  placeholder="Search exercises"
+                  aria-label="Search exercises"
+                  autocomplete="off"
+                  enterkeyhint="search"
+                >
+              </div>
+            </form>
+
+            <div class="mt-3 max-h-[28rem] overflow-y-auto pr-1">
+              {% include "plans/_picker.html" %}
+            </div>
+
+            <p class="mt-3 border-t border-base-300 pt-3 text-[13px] text-base-content/60">
+              Can't find it? Create a new exercise below.
+            </p>
+          </div>
+        </aside>
+      {% endif %}
+
+      <div class="order-1 lg:order-2">
+        <form method="post" action="{% if is_edit %}{% url 'plan_item_edit' plan.pk item.pk %}{% else %}{% url 'plan_item_new' plan.pk day.pk %}{% endif %}" class="ll-card" x-data="{ tracking: '{{ selected_tracking|escapejs }}' }" hx-boost="false">
+          {% csrf_token %}
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-error mb-4 items-start text-sm" role="alert">
+              <div class="space-y-1">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+              </div>
+            </div>
+          {% endif %}
+
+          <div>
+            <label for="{{ form.exercise.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.exercise.label }}</label>
+            {{ form.exercise }}
+            {% for error in form.exercise.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+          </div>
+
+          <p class="mt-4 text-[13px] text-base-content/50" x-show="!tracking">
+            Choose an exercise to see its target fields.
+          </p>
+
+          <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div x-show="['WEIGHT_REPS','BODYWEIGHT','TIMED','WEIGHT_DISTANCE'].includes(tracking)">
+              <label for="{{ form.target_sets.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_sets.label }}</label>
+              {{ form.target_sets }}
+              {% for error in form.target_sets.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+            <div x-show="['WEIGHT_REPS','BODYWEIGHT'].includes(tracking)">
+              <label for="{{ form.rep_min.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.rep_min.label }}</label>
+              {{ form.rep_min }}
+              {% for error in form.rep_min.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+            <div x-show="['WEIGHT_REPS','BODYWEIGHT'].includes(tracking)">
+              <label for="{{ form.rep_max.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.rep_max.label }}</label>
+              {{ form.rep_max }}
+              {% for error in form.rep_max.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+            <div x-show="['TIMED','CARDIO'].includes(tracking)">
+              <label for="{{ form.target_seconds.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_seconds.label }}</label>
+              {{ form.target_seconds }}
+              {% for error in form.target_seconds.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+            <div x-show="['CARDIO','WEIGHT_DISTANCE'].includes(tracking)">
+              <label for="{{ form.target_distance_mi.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_distance_mi.label }}</label>
+              {{ form.target_distance_mi }}
+              {% for error in form.target_distance_mi.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+          </div>
+          <p class="mt-2 text-[12px] text-base-content/40" x-show="tracking === 'CARDIO'">
+            Add a duration, a distance, or both. Cardio always uses one set.
+          </p>
+
+          <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div>
+              <label for="{{ form.rest_seconds.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.rest_seconds.label }}</label>
+              {{ form.rest_seconds }}
+              {% for error in form.rest_seconds.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+            <div>
+              <label for="{{ form.notes.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.notes.label }}</label>
+              {{ form.notes }}
+              {% for error in form.notes.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+          </div>
+
+          <div class="mt-5 flex flex-col gap-2 sm:flex-row">
+            <button type="submit" class="btn btn-primary h-14 min-h-14 flex-1 text-[17px] font-semibold">
+              {% if is_edit %}Save changes{% else %}Add to day{% endif %}
+            </button>
+            <a href="{% url 'plan_detail' plan.pk %}" class="btn btn-neutral h-14 min-h-14 px-5 text-[16px] font-semibold">Cancel</a>
+          </div>
+        </form>
+
+        {% if not is_edit %}
+          <details class="ll-card mt-4">
+            <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 text-[15px] font-semibold text-primary [&::-webkit-details-marker]:hidden">
+              {% icon "plus" css_class="size-4" %}
+              Create a new exercise
+            </summary>
+            <form method="post" action="{% url 'plan_item_new' plan.pk day.pk %}" class="mt-4 space-y-3">
+              {% csrf_token %}
+              <input type="hidden" name="form_name" value="exercise">
+              {% if inline_form.non_field_errors %}
+                <div class="alert alert-error items-start text-sm" role="alert">
+                  <div class="space-y-1">
+                    {% for error in inline_form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+              <div>
+                <label for="{{ inline_form.name.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ inline_form.name.label }}</label>
+                {{ inline_form.name }}
+                {% for error in inline_form.name.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+              </div>
+              <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div>
+                  <label for="{{ inline_form.primary_muscle.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ inline_form.primary_muscle.label }}</label>
+                  {{ inline_form.primary_muscle }}
+                  {% for error in inline_form.primary_muscle.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+                <div>
+                  <label for="{{ inline_form.tracking_type.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ inline_form.tracking_type.label }}</label>
+                  {{ inline_form.tracking_type }}
+                  {% for error in inline_form.tracking_type.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+                </div>
+              </div>
+              <div>
+                <label for="{{ inline_form.notes.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ inline_form.notes.label }} <span class="font-normal text-base-content/50">(optional)</span></label>
+                {{ inline_form.notes }}
+                {% for error in inline_form.notes.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+              </div>
+              <button type="submit" class="btn btn-neutral h-12 min-h-12 w-full text-[16px] font-semibold">Create exercise</button>
+            </form>
+          </details>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

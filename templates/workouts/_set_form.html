@@ -1,0 +1,184 @@
+{% load icons %}
+{% comment %}
+One set-entry screen. Field order and required fields follow PRD §8.2. The
+steppers are progressive enhancement; inputs stay typeable with JavaScript off.
+{% endcomment %}
+<section class="ll-card" aria-labelledby="set-exercise">
+  <p class="text-[11px] font-semibold uppercase tracking-wider text-primary">
+    Exercise {{ exercise_position }} of {{ exercise_total }}
+    {% if step.is_superset %} · Superset {{ step.superset_label }}{% endif %}
+  </p>
+  <div class="mt-1 flex items-start justify-between gap-2">
+    <h1 id="set-exercise" class="min-w-0 text-[26px] font-bold leading-tight">{{ session_exercise.exercise.name }}</h1>
+    {% if increase %}
+      <span class="mt-1 inline-flex shrink-0 items-center gap-1 rounded-full bg-success/15 px-2 py-1 text-[11px] font-semibold text-success">
+        {% icon "trending-up" css_class="size-3.5" %}
+        Increase
+      </span>
+    {% endif %}
+  </div>
+  <p class="mt-1 text-[14px] text-base-content/70">
+    {% if step.is_superset %}Round {{ step.round_number }} of {{ step.total_rounds }} · {% endif %}
+    Set {{ step.set_number }} of {{ session_exercise.target_sets }} · {{ session_exercise.goal_label }}
+  </p>
+  {% if last_time %}
+    <p class="mt-1 text-[13px] text-base-content/50">Last: {{ last_time }}</p>
+  {% endif %}
+  <p class="mt-1 text-[13px] text-base-content/50">{{ session_exercise.target_summary }} · {{ session_exercise.rest_seconds }}s rest</p>
+
+  <form
+    method="post"
+    action="{% url 'session_log_set' session.pk %}"
+    hx-post="{% url 'session_log_set' session.pk %}"
+    hx-target="#runner"
+    hx-swap="outerHTML"
+    hx-disabled-elt="find button[type='submit']"
+    class="mt-5 space-y-4"
+    data-set-form
+  >
+    {% csrf_token %}
+    <input type="hidden" name="exercise" value="{{ session_exercise.pk }}">
+    <input type="hidden" name="client_id" value="{{ client_id }}">
+
+    {% if tracking_type == "WEIGHT_REPS" %}
+      <div>
+        <label for="weight_lb" class="mb-1.5 block text-sm font-medium">Weight (lb)</label>
+        <div class="flex items-stretch gap-2">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-5" data-step-target="weight_lb" aria-label="Decrease weight by 5 pounds">−</button>
+          <input id="weight_lb" name="weight_lb" type="number" inputmode="decimal" step="any" min="0" value="{{ values.weight_lb }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold" required data-autofocus>
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="5" data-step-target="weight_lb" aria-label="Increase weight by 5 pounds">+</button>
+        </div>
+      </div>
+      <div>
+        <label for="reps" class="mb-1.5 block text-sm font-medium">Reps</label>
+        <div class="flex items-stretch gap-2">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-1" data-step-target="reps" aria-label="Decrease reps by 1">−</button>
+          <input id="reps" name="reps" type="number" inputmode="numeric" step="1" min="1" value="{{ values.reps }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold" required>
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="1" data-step-target="reps" aria-label="Increase reps by 1">+</button>
+        </div>
+      </div>
+    {% elif tracking_type == "BODYWEIGHT" %}
+      <div>
+        <label for="reps" class="mb-1.5 block text-sm font-medium">Reps</label>
+        <div class="flex items-stretch gap-2">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-1" data-step-target="reps" aria-label="Decrease reps by 1">−</button>
+          <input id="reps" name="reps" type="number" inputmode="numeric" step="1" min="1" value="{{ values.reps }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold" required data-autofocus>
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="1" data-step-target="reps" aria-label="Increase reps by 1">+</button>
+        </div>
+      </div>
+      <div>
+        <label for="weight_lb" class="mb-1.5 block text-sm font-medium">Added weight (lb) <span class="font-normal text-base-content/50">(optional)</span></label>
+        <div class="flex items-stretch gap-2">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-5" data-step-target="weight_lb" aria-label="Decrease added weight by 5 pounds">−</button>
+          <input id="weight_lb" name="weight_lb" type="number" inputmode="decimal" step="any" min="0" value="{{ values.weight_lb|default:'0' }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="5" data-step-target="weight_lb" aria-label="Increase added weight by 5 pounds">+</button>
+        </div>
+      </div>
+    {% elif tracking_type == "TIMED" %}
+      <div>
+        <label for="duration_seconds" class="mb-1.5 block text-sm font-medium">Time (sec)</label>
+        <div class="flex items-stretch gap-2">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-5" data-step-target="duration_seconds" aria-label="Decrease time by 5 seconds">−</button>
+          <input id="duration_seconds" name="duration_seconds" type="number" inputmode="numeric" step="1" min="1" value="{{ values.duration_seconds }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold" required data-autofocus>
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="5" data-step-target="duration_seconds" aria-label="Increase time by 5 seconds">+</button>
+        </div>
+      </div>
+      <div>
+        <label for="weight_lb" class="mb-1.5 block text-sm font-medium">Added weight (lb) <span class="font-normal text-base-content/50">(optional)</span></label>
+        <div class="flex items-stretch gap-2">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-5" data-step-target="weight_lb" aria-label="Decrease added weight by 5 pounds">−</button>
+          <input id="weight_lb" name="weight_lb" type="number" inputmode="decimal" step="any" min="0" value="{{ values.weight_lb }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="5" data-step-target="weight_lb" aria-label="Increase added weight by 5 pounds">+</button>
+        </div>
+      </div>
+    {% elif tracking_type == "CARDIO" %}
+      <div>
+        <label for="duration" class="mb-1.5 block text-sm font-medium">Duration <span class="font-normal text-base-content/50">(mm:ss)</span></label>
+        <input id="duration" name="duration" type="text" inputmode="numeric" pattern="[0-9]+:[0-5][0-9]" value="{{ values.duration }}" placeholder="30:00" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold" required data-autofocus>
+      </div>
+      <div>
+        <label for="distance_mi" class="mb-1.5 block text-sm font-medium">Distance (mi) <span class="font-normal text-base-content/50">(optional)</span></label>
+        <input id="distance_mi" name="distance_mi" type="number" inputmode="decimal" step="0.1" min="0" value="{{ values.distance_mi }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold">
+      </div>
+    {% elif tracking_type == "WEIGHT_DISTANCE" %}
+      <div>
+        <label for="weight_lb" class="mb-1.5 block text-sm font-medium">Weight (lb)</label>
+        <div class="flex items-stretch gap-2">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-5" data-step-target="weight_lb" aria-label="Decrease weight by 5 pounds">−</button>
+          <input id="weight_lb" name="weight_lb" type="number" inputmode="decimal" step="any" min="0" value="{{ values.weight_lb }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold" required data-autofocus>
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="5" data-step-target="weight_lb" aria-label="Increase weight by 5 pounds">+</button>
+        </div>
+      </div>
+      <div>
+        <label for="distance_mi" class="mb-1.5 block text-sm font-medium">Distance (mi) <span class="font-normal text-base-content/50">(optional)</span></label>
+        <input id="distance_mi" name="distance_mi" type="number" inputmode="decimal" step="0.1" min="0" value="{{ values.distance_mi }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold">
+      </div>
+    {% endif %}
+
+    <fieldset>
+      <legend class="mb-1.5 block text-sm font-medium">
+        How hard? <span class="font-normal text-base-content/50">(optional)</span>
+      </legend>
+      <div class="grid grid-cols-5 gap-2">
+        {% for value in difficulty_range %}
+          <label class="ll-choice min-h-11" for="difficulty-{{ value }}">
+            <input
+              type="radio"
+              id="difficulty-{{ value }}"
+              name="difficulty"
+              value="{{ value }}"
+              data-difficulty
+              {% if values.difficulty|stringformat:"s" == value|stringformat:"s" %}checked{% endif %}
+            >
+            <span>{{ value }}</span>
+          </label>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <button
+      id="set-submit"
+      type="submit"
+      class="btn btn-primary h-14 min-h-14 w-full text-[17px] font-semibold"
+    >
+      {% if save_failed %}Retry save{% else %}Submit{% endif %}
+    </button>
+  </form>
+
+  <div class="mt-2 grid grid-cols-2 gap-2">
+    <form method="post" action="{% url 'session_add_set' session.pk %}" hx-post="{% url 'session_add_set' session.pk %}" hx-target="#runner" hx-swap="outerHTML" hx-disabled-elt="find button">
+      {% csrf_token %}
+      <input type="hidden" name="exercise" value="{{ session_exercise.pk }}">
+      <button type="submit" class="btn btn-ghost h-11 min-h-11 w-full gap-1 text-[14px] text-primary">
+        {% icon "plus" css_class="size-4" %}
+        Add set
+      </button>
+    </form>
+    <form method="post" action="{% url 'session_skip_set' session.pk %}" hx-post="{% url 'session_skip_set' session.pk %}" hx-target="#runner" hx-swap="outerHTML" hx-disabled-elt="find button">
+      {% csrf_token %}
+      <input type="hidden" name="exercise" value="{{ session_exercise.pk }}">
+      <button type="submit" class="btn btn-ghost h-11 min-h-11 w-full gap-1 text-[14px] text-base-content/60">
+        {% icon "skip-forward" css_class="size-4" %}
+        Skip set
+      </button>
+    </form>
+  </div>
+
+  {% if done_sets %}
+    <div class="mt-4 border-t border-base-300 pt-3">
+      <h2 class="text-[11px] font-semibold uppercase tracking-wider text-base-content/50">Completed sets</h2>
+      <ul class="mt-1 divide-y divide-base-300">
+        {% for log in done_sets %}
+          <li class="flex min-h-11 items-center gap-2 py-1.5">
+            <span class="text-success" aria-hidden="true">{% icon "check" css_class="size-4" %}</span>
+            <span class="text-[14px] font-medium">Set {{ log.set_number }}</span>
+            <span class="min-w-0 flex-1 truncate text-right text-[14px] text-base-content/70">{{ log.display_value }}</span>
+            {% if log.difficulty %}
+              <span class="shrink-0 rounded-full bg-base-300 px-2 py-0.5 text-[11px] text-base-content/60">{{ log.difficulty }}/10</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+</section>

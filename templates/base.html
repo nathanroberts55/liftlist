@@ -1,0 +1,151 @@
+{% load static icons %}<!doctype html>
+<html lang="en" data-theme="{{ theme }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>{% block title %}{{ page_title|default:"Lift List" }} · Lift List{% endblock %}</title>
+
+    <meta name="theme-color" content="{{ theme_color }}">
+
+    {% if theme_preference == "SYSTEM" %}
+      <script>
+        (function () {
+          try {
+            var light = window.matchMedia("(prefers-color-scheme: light)").matches;
+            document.documentElement.setAttribute(
+              "data-theme",
+              light ? "liftlist-light" : "liftlist-dark"
+            );
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) {
+              meta.setAttribute(
+                "content",
+                light ? "{{ theme_color_light }}" : "{{ theme_color_dark }}"
+              );
+            }
+          } catch (error) {}
+        })();
+      </script>
+    {% endif %}
+
+    <meta name="description" content="Plan workout splits, run workouts set by set, and track progress.">
+    <meta name="color-scheme" content="dark light">
+
+    <link rel="manifest" href="{% url 'manifest' %}">
+    <link rel="icon" href="{% static 'img/icons/favicon.svg' %}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{% static 'img/icons/apple-touch-icon.png' %}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Lift List">
+
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+    <script src="{% static 'vendor/alpine.min.js' %}" defer></script>
+    {% if user.is_authenticated %}
+      <script src="{% static 'vendor/sortable.min.js' %}" defer></script>
+      <script src="{% static 'js/plan-reorder.js' %}" defer></script>
+      <script src="{% static 'js/htmx-focus.js' %}" defer></script>
+      <script src="{% static 'js/sound.js' %}" defer></script>
+      <script src="{% static 'js/timer.js' %}" defer></script>
+    {% endif %}
+    {% block head %}{% endblock %}
+  </head>
+  <body
+    class="bg-base-100 text-base-content antialiased"
+    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+    {% if user.is_authenticated %}hx-boost="true"{% endif %}
+  >
+    <div class="min-h-dvh md:flex">
+      {% if user.is_authenticated %}
+        <aside class="hidden w-64 shrink-0 flex-col border-r border-base-300 bg-base-200 md:flex">
+          <div class="px-6 py-6">
+            <a href="{% url 'today' %}" class="ll-wordmark inline-flex min-h-11 items-center text-lg">
+              <span class="text-primary">L</span>IFT <span class="text-primary">L</span>IST
+            </a>
+          </div>
+          <nav class="flex-1 space-y-1 px-3" aria-label="Main">
+            {% for item in nav_items %}
+              <a
+                href="{{ item.url }}"
+                class="flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-medium {% if item.is_active %}bg-base-300 text-base-content{% else %}text-base-content/60 hover:bg-base-300/60 hover:text-base-content{% endif %}"
+                {% if item.is_active %}aria-current="page"{% endif %}
+              >
+                {% icon item.icon css_class="size-5" %}
+                <span>{{ item.label }}</span>
+              </a>
+            {% endfor %}
+          </nav>
+          <div class="space-y-1 border-t border-base-300 p-3">
+            <a
+              href="{% url 'settings' %}"
+              class="flex min-h-12 items-center gap-3 rounded-xl px-3 text-[15px] font-medium {% if request.resolver_match.url_name == 'settings' %}bg-base-300 text-base-content{% else %}text-base-content/60 hover:bg-base-300/60 hover:text-base-content{% endif %}"
+              {% if request.resolver_match.url_name == 'settings' %}aria-current="page"{% endif %}
+            >
+              {% icon "settings" css_class="size-5" %}
+              <span>Settings</span>
+            </a>
+            <form method="post" action="{% url 'logout' %}" hx-boost="false">
+              {% csrf_token %}
+              <button
+                type="submit"
+                class="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 text-[15px] font-medium text-base-content/60 hover:bg-base-300/60 hover:text-base-content"
+              >
+                {% icon "log-out" css_class="size-5" %}
+                <span>Log out</span>
+              </button>
+            </form>
+          </div>
+        </aside>
+      {% endif %}
+
+      <div class="flex min-w-0 flex-1 flex-col">
+        {% if user.is_authenticated %}
+          {% block topbar %}
+            <header class="ll-topbar sticky top-0 z-30 border-b border-base-300 bg-base-100/95 backdrop-blur md:hidden">
+              <div class="flex h-14 items-center gap-3 px-4">
+                {% block topbar_left %}
+                  <h1 class="truncate text-xl font-bold">{{ page_title|default:"Lift List" }}</h1>
+                {% endblock %}
+                {% block topbar_actions %}{% endblock %}
+                <a
+                  href="{% url 'settings' %}"
+                  class="btn btn-ghost btn-square ml-auto h-11 min-h-11 w-11"
+                  aria-label="Settings"
+                >
+                  {% icon "settings" css_class="size-5" %}
+                </a>
+              </div>
+            </header>
+          {% endblock %}
+        {% endif %}
+
+        <main
+          class="{% if user.is_authenticated %}mx-auto w-full max-w-[1100px] flex-1 px-4 pb-28 pt-4 md:px-6 md:pb-10 md:pt-8{% else %}flex flex-1 flex-col items-center justify-center px-4 py-10{% endif %}"
+        >
+          {% include "components/messages.html" %}
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+
+    {% if user.is_authenticated %}
+      {% block tabbar %}
+        <nav class="ll-tabbar md:hidden" aria-label="Main">
+          {% for item in nav_items %}
+            <a
+              href="{{ item.url }}"
+              class="ll-nav-item"
+              {% if item.is_active %}aria-current="page"{% endif %}
+            >
+              {% icon item.icon css_class="size-6" %}
+              <span>{{ item.label }}</span>
+            </a>
+          {% endfor %}
+        </nav>
+      {% endblock %}
+    {% endif %}
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

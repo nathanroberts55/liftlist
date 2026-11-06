@@ -1,0 +1,112 @@
+{% load icons %}
+{% comment %}
+The runner's single swap target. Every runner POST returns this fragment so the
+header, set screen, rest overlay, and sheets always agree on server state.
+{% endcomment %}
+<div id="runner" class="space-y-4">
+  <header class="flex items-center gap-2">
+    <a
+      href="{% url 'today' %}"
+      class="btn btn-ghost btn-square h-11 min-h-11 w-11 shrink-0"
+      aria-label="Close workout and return to Today"
+    >
+      {% icon "x" css_class="size-5" %}
+    </a>
+    <div class="min-w-0 flex-1">
+      <p class="truncate text-[15px] font-semibold">{{ session.title }}</p>
+      <p class="text-[11px] font-semibold uppercase tracking-wider {% if completed %}text-success{% else %}text-primary{% endif %}">
+        {% if completed %}Complete{% else %}In progress{% endif %}
+      </p>
+    </div>
+    {% if not completed %}
+      <a
+        href="{% url 'session_run' session.pk %}?panel=menu"
+        hx-get="{% url 'session_run' session.pk %}?panel=menu"
+        hx-target="#runner"
+        hx-swap="outerHTML"
+        class="btn btn-ghost btn-square h-11 min-h-11 w-11 shrink-0"
+        aria-label="Workout menu"
+      >
+        {% icon "ellipsis-vertical" css_class="size-5" %}
+      </a>
+    {% endif %}
+  </header>
+
+  {% if panel == "menu" %}
+    {% include "workouts/_menu.html" %}
+  {% elif panel == "reorder" %}
+    {% include "workouts/_reorder_sheet.html" %}
+  {% elif panel == "jump" %}
+    {% include "workouts/_jump_sheet.html" %}
+  {% elif panel == "add" %}
+    {% include "workouts/_add_exercise.html" %}
+  {% elif completed %}
+    {% include "workouts/_finish.html" %}
+  {% elif not has_exercises %}
+    <section class="ll-card" aria-labelledby="empty-runner">
+      <h1 id="empty-runner" class="text-xl font-bold">No exercises yet</h1>
+      <p class="mt-1 text-[15px] text-base-content/60">
+        Add an exercise to start logging sets, or finish an empty workout.
+      </p>
+      <a
+        href="{% url 'session_run' session.pk %}?panel=add"
+        hx-get="{% url 'session_run' session.pk %}?panel=add"
+        hx-target="#runner"
+        hx-swap="outerHTML"
+        class="btn btn-primary mt-4 h-12 min-h-12 w-full gap-2 text-[16px] font-semibold"
+      >
+        {% icon "plus" css_class="size-5" %}
+        Add exercise
+      </a>
+      <div class="mt-2 grid grid-cols-2 gap-2">
+        <form method="post" action="{% url 'session_finish' session.pk %}" hx-post="{% url 'session_finish' session.pk %}" hx-target="#runner" hx-swap="outerHTML">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-neutral h-12 min-h-12 w-full text-[15px] font-semibold">Finish</button>
+        </form>
+        <form method="post" action="{% url 'session_discard' session.pk %}" hx-boost="false">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-ghost h-12 min-h-12 w-full text-[15px] font-semibold text-error">Discard</button>
+        </form>
+      </div>
+    </section>
+  {% elif not step %}
+    <section class="ll-card" aria-labelledby="all-sets-done">
+      <span class="flex size-12 items-center justify-center rounded-full bg-success/15 text-success" aria-hidden="true">
+        {% icon "check" css_class="size-6" %}
+      </span>
+      <h1 id="all-sets-done" class="mt-4 text-xl font-bold">All sets logged</h1>
+      <p class="mt-1 text-[15px] text-base-content/60">
+        {{ session.progress_label }}. Finish to save the workout.
+      </p>
+      {% if increase_exercises %}
+        <div class="mt-4 rounded-xl bg-success/10 px-3 py-2 text-[14px] text-success">
+          <p class="font-semibold">Ready to increase next time</p>
+          <p class="mt-0.5">{% for exercise in increase_exercises %}{{ exercise.exercise.name }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+        </div>
+      {% endif %}
+      <form method="post" action="{% url 'session_finish' session.pk %}" hx-post="{% url 'session_finish' session.pk %}" hx-target="#runner" hx-swap="outerHTML" class="mt-4">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary h-14 min-h-14 w-full text-[17px] font-semibold">Finish workout</button>
+      </form>
+      <a
+        href="{% url 'session_run' session.pk %}?panel=add"
+        hx-get="{% url 'session_run' session.pk %}?panel=add"
+        hx-target="#runner"
+        hx-swap="outerHTML"
+        class="btn btn-ghost mt-2 h-11 min-h-11 w-full gap-1 text-[15px] text-primary"
+      >
+        {% icon "plus" css_class="size-4" %}
+        Add exercise
+      </a>
+    </section>
+  {% elif rest_seconds %}
+    <div x-data="runnerTimer({{ rest_seconds }})" x-init="init()">
+      {% include "workouts/_rest.html" %}
+      <div x-ref="setPanel">
+        {% include "workouts/_set_form.html" %}
+      </div>
+    </div>
+  {% else %}
+    {% include "workouts/_set_form.html" %}
+  {% endif %}
+</div>

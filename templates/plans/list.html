@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}Plans · Lift List{% endblock %}
+
+{% block topbar_actions %}
+  <a href="{% url 'plan_new' %}" class="btn btn-primary btn-sm h-11 min-h-11 gap-1 px-3 text-[15px]">
+    {% icon "plus" css_class="size-4" %}
+    New
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-[1100px]">
+    <div class="hidden items-start justify-between gap-4 md:flex">
+      <div>
+        <h1 class="text-2xl font-bold">Plans</h1>
+        <p class="mt-1 text-sm text-base-content/60">Build a split, then activate it to schedule workouts.</p>
+      </div>
+      <a href="{% url 'plan_new' %}" class="btn btn-primary h-12 min-h-12 gap-2 px-4 text-[16px] font-semibold">
+        {% icon "plus" css_class="size-5" %}
+        New plan
+      </a>
+    </div>
+
+    {% if not has_plans %}
+      <div class="mt-4 md:mt-8">
+        {% url 'plan_new' as new_url %}
+        {% include "components/empty_state.html" with icon="clipboard-list" title="No plans yet" message="Create a plan to choose your training days and exercises." action_label="Create plan" action_href=new_url %}
+      </div>
+    {% else %}
+      {% if groups.active %}
+        <section class="mt-4 md:mt-8" aria-labelledby="active-plans">
+          <h2 id="active-plans" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Active</h2>
+          <div class="mt-2 space-y-2">
+            {% for plan in groups.active %}
+              <a href="{% url 'plan_detail' plan.pk %}" class="ll-card block hover:bg-base-300/60">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="truncate text-[17px] font-semibold">{{ plan.name }}</p>
+                    <p class="mt-1 text-[13px] text-base-content/60">
+                      {{ plan.get_split_type_display }} · Start {{ plan.start_date|date:"M j" }}
+                      {% if plan.length_weeks %}· {{ plan.length_weeks }} wk{{ plan.length_weeks|pluralize }}{% endif %}
+                    </p>
+                    {% if plan.weekday_labels %}
+                      <p class="mt-1 text-[13px] font-medium text-primary">{{ plan.weekday_labels }}</p>
+                    {% endif %}
+                  </div>
+                  <span class="shrink-0 rounded-full bg-success/15 px-2.5 py-1 text-[11px] font-semibold text-success">ACTIVE</span>
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {% if groups.drafts %}
+        <section class="mt-6" aria-labelledby="draft-plans">
+          <h2 id="draft-plans" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Drafts</h2>
+          <div class="ll-card mt-2 divide-y divide-base-300 overflow-hidden p-0">
+            {% for plan in groups.drafts %}
+              <a href="{% url 'plan_detail' plan.pk %}" class="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-base-300/60">
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[16px] font-semibold">{{ plan.name }}</span>
+                  <span class="mt-0.5 block text-[13px] text-base-content/50">
+                    {{ plan.get_split_type_display }} · {{ plan.days.all|length }} day{{ plan.days.all|length|pluralize }}
+                  </span>
+                </span>
+                {% icon "chevron-right" css_class="size-4 shrink-0 text-base-content/30" %}
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+
+      {% if groups.archived %}
+        <section class="mt-6" aria-labelledby="archived-plans">
+          <h2 id="archived-plans" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Archived</h2>
+          <div class="ll-card mt-2 divide-y divide-base-300 overflow-hidden p-0">
+            {% for plan in groups.archived %}
+              <a href="{% url 'plan_detail' plan.pk %}" class="flex min-h-14 items-center gap-3 px-4 py-3 hover:bg-base-300/60">
+                <span class="min-w-0 flex-1">
+                  <span class="block truncate text-[16px] font-medium text-base-content/70">{{ plan.name }}</span>
+                  <span class="mt-0.5 block text-[13px] text-base-content/50">
+                    Ended{% if plan.archived_at %} {{ plan.archived_at|date:"M j" }}{% endif %}
+                  </span>
+                </span>
+                {% icon "chevron-right" css_class="size-4 shrink-0 text-base-content/30" %}
+              </a>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+    {% endif %}
+  </div>
+{% endblock %}

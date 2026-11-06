@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}Settings · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a href="{% url 'today' %}" class="btn btn-ghost h-11 min-h-11 -ml-2 gap-1 px-2 text-[15px]">
+    {% icon "arrow-left" css_class="size-5" %}
+    <span>Settings</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-xl">
+    <h1 class="hidden text-2xl font-bold md:block">Settings</h1>
+
+    <form method="post" action="{% url 'settings' %}" class="mt-4 space-y-6 md:mt-6">
+      {% csrf_token %}
+
+      <fieldset class="ll-card">
+        <legend class="px-1 text-lg font-semibold">Theme</legend>
+        <p class="mt-1 text-sm text-base-content/60">
+          Dark is the default. Match device follows your phone or tablet setting.
+        </p>
+        <div class="mt-4 grid grid-cols-3 gap-2">
+          {% for radio in form.theme %}
+            <label class="theme-option text-sm" for="{{ radio.id_for_label }}">
+              {{ radio.tag }}
+              <span>{{ radio.choice_label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        {% for error in form.theme.errors %}
+          <p class="mt-2 text-sm text-error">{{ error }}</p>
+        {% endfor %}
+      </fieldset>
+
+      <fieldset class="ll-card">
+        <legend class="px-1 text-lg font-semibold">Rest</legend>
+        <label for="{{ form.default_rest_seconds.id_for_label }}" class="mt-3 block text-sm font-medium">
+          {{ form.default_rest_seconds.label }}
+        </label>
+        <div class="mt-1.5 flex items-center gap-3">
+          {{ form.default_rest_seconds }}
+          <span class="text-sm text-base-content/60">seconds</span>
+        </div>
+        <p class="mt-1.5 text-[13px] text-base-content/60">
+          {{ form.default_rest_seconds.help_text }}
+        </p>
+        {% for error in form.default_rest_seconds.errors %}
+          <p class="mt-2 text-sm text-error" role="alert">{{ error }}</p>
+        {% endfor %}
+      </fieldset>
+
+      <button type="submit" class="btn btn-primary h-14 min-h-14 w-full text-[17px] font-semibold">
+        Save
+      </button>
+    </form>
+
+    <div class="ll-card mt-6 flex items-center justify-between gap-4">
+      <div>
+        <p class="font-semibold">Log out</p>
+        <p class="mt-0.5 text-sm text-base-content/60">End this session on this device.</p>
+      </div>
+      <form method="post" action="{% url 'logout' %}" hx-boost="false">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-ghost h-12 min-h-12 gap-2 text-error">
+          {% icon "log-out" css_class="size-5" %}
+          Log out
+        </button>
+      </form>
+    </div>
+
+    <p class="mt-8 text-center text-[13px] text-base-content/50">
+      Lift List · M2 plan builder
+    </p>
+  </div>
+{% endblock %}

@@ -1,0 +1,338 @@
+@import "tailwindcss" source(none);
+
+/*
+ * DaisyUI 5 is vendored (no Node toolchain). The package no longer ships the
+ * daisyui.mjs / daisyui-theme.mjs files mentioned in early TECH_SPEC drafts, so
+ * we load the plugin entry points directly. See ADR 0002.
+ */
+@plugin "../vendor/daisyui/index.js" {
+  themes: false;
+  logs: false;
+}
+
+@plugin "../vendor/daisyui/theme/index.js" {
+  name: "liftlist-dark";
+  default: true;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: #0b0d10;
+  --color-base-200: #15181d;
+  --color-base-300: #1f242b;
+  --color-base-content: #f2f4f7;
+  --color-primary: #2b7fff;
+  --color-primary-content: #ffffff;
+  --color-secondary: #2a3038;
+  --color-secondary-content: #f2f4f7;
+  --color-accent: #ff9f0a;
+  --color-accent-content: #0b0d10;
+  --color-neutral: #1f242b;
+  --color-neutral-content: #f2f4f7;
+  --color-info: #64d2ff;
+  --color-info-content: #0b0d10;
+  --color-success: #30d158;
+  --color-success-content: #0b0d10;
+  --color-warning: #ff9f0a;
+  --color-warning-content: #0b0d10;
+  --color-error: #ff453a;
+  --color-error-content: #0b0d10;
+
+  --radius-selector: 9999px;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "../vendor/daisyui/theme/index.js" {
+  name: "liftlist-light";
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: #f5f6f8;
+  --color-base-200: #ffffff;
+  --color-base-300: #eef0f3;
+  --color-base-content: #0f1115;
+  --color-primary: #0a6cff;
+  --color-primary-content: #ffffff;
+  --color-secondary: #dde1e6;
+  --color-secondary-content: #0f1115;
+  --color-accent: #d97a00;
+  --color-accent-content: #ffffff;
+  --color-neutral: #eef0f3;
+  --color-neutral-content: #0f1115;
+  --color-info: #0091c2;
+  --color-info-content: #ffffff;
+  --color-success: #1fa34a;
+  --color-success-content: #ffffff;
+  --color-warning: #d97a00;
+  --color-warning-content: #ffffff;
+  --color-error: #e5383b;
+  --color-error-content: #ffffff;
+
+  --radius-selector: 9999px;
+  --radius-field: 0.75rem;
+  --radius-box: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@source "../../templates/**/*.html";
+@source "../../apps/**/*.py";
+@source "../../static/js/**/*.js";
+
+/* DESIGN §2 tokens as plain custom properties for hand-written CSS. */
+:root,
+[data-theme="liftlist-dark"] {
+  --ll-bg: #0b0d10;
+  --ll-surface: #15181d;
+  --ll-surface-2: #1f242b;
+  --ll-border: #2a3038;
+  --ll-text: #f2f4f7;
+  --ll-text-muted: #9aa3af;
+  --ll-primary: #2b7fff;
+  --ll-primary-soft: #2b7fff26;
+  --ll-on-primary: #ffffff;
+  --ll-accent: #ff9f0a;
+  --ll-success: #30d158;
+  --ll-danger: #ff453a;
+  --ll-info: #64d2ff;
+}
+
+[data-theme="liftlist-light"] {
+  --ll-bg: #f5f6f8;
+  --ll-surface: #ffffff;
+  --ll-surface-2: #eef0f3;
+  --ll-border: #dde1e6;
+  --ll-text: #0f1115;
+  --ll-text-muted: #5b6470;
+  --ll-primary: #0a6cff;
+  --ll-primary-soft: #0a6cff1a;
+  --ll-on-primary: #ffffff;
+  --ll-accent: #d97a00;
+  --ll-success: #1fa34a;
+  --ll-danger: #e5383b;
+  --ll-info: #0091c2;
+}
+
+@layer base {
+  html {
+    font-family:
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--ll-bg);
+    color: var(--ll-text);
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100dvh;
+    font-size: 16px;
+  }
+
+  /* Inputs must be >= 16px so iOS does not zoom on focus (DESIGN §3). */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ll-primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--ll-primary-soft);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  .ll-wordmark {
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  .ll-card {
+    border: 1px solid var(--ll-border);
+    border-radius: 1rem;
+    background-color: var(--ll-surface);
+    padding: 1rem;
+  }
+
+  .ll-topbar {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .ll-tabbar {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 40;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-top: 1px solid var(--ll-border);
+    background-color: var(--ll-surface);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .ll-nav-item {
+    display: flex;
+    min-height: 56px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ll-text-muted);
+  }
+
+  .ll-nav-item[aria-current="page"] {
+    color: var(--ll-primary);
+  }
+
+  .ll-nav-item:active {
+    background-color: var(--ll-surface-2);
+  }
+
+  .ll-input {
+    display: block;
+    width: 100%;
+    height: 3rem;
+    border: 1px solid var(--ll-border);
+    border-radius: 0.75rem;
+    background-color: var(--ll-surface-2);
+    padding: 0 0.875rem;
+    color: var(--ll-text);
+    font-size: 16px;
+  }
+
+  .ll-input::placeholder {
+    color: var(--ll-text-muted);
+  }
+
+  .ll-input:focus {
+    border-color: var(--ll-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ll-primary-soft);
+  }
+
+  .theme-option {
+    position: relative;
+    display: flex;
+    min-height: 56px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid var(--ll-border);
+    border-radius: 0.75rem;
+    background-color: var(--ll-surface-2);
+    padding: 0.5rem;
+    font-weight: 600;
+    color: var(--ll-text-muted);
+  }
+
+  .theme-option:has(input:checked) {
+    border-color: var(--ll-primary);
+    background-color: var(--ll-primary-soft);
+    color: var(--ll-text);
+  }
+
+  .theme-option:has(input:focus-visible) {
+    outline: 2px solid var(--ll-primary);
+    outline-offset: 2px;
+  }
+
+  .theme-option-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .ll-filter-chip {
+    display: inline-flex;
+    min-height: 2.75rem;
+    flex: none;
+    align-items: center;
+    border: 1px solid var(--ll-border);
+    border-radius: 9999px;
+    background-color: var(--ll-surface);
+    padding: 0 0.875rem;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ll-text-muted);
+    white-space: nowrap;
+  }
+
+  .ll-filter-chip:hover {
+    color: var(--ll-text);
+  }
+
+  .ll-filter-chip[aria-pressed="true"] {
+    border-color: var(--ll-primary);
+    background-color: var(--ll-primary-soft);
+    color: var(--ll-text);
+  }
+
+  .ll-choice {
+    position: relative;
+    display: flex;
+    min-height: 2.75rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--ll-border);
+    border-radius: 9999px;
+    background-color: var(--ll-surface-2);
+    padding: 0.5rem 0.625rem;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ll-text-muted);
+    text-align: center;
+  }
+
+  .ll-choice:has(input:checked) {
+    border-color: var(--ll-primary);
+    background-color: var(--ll-primary-soft);
+    color: var(--ll-text);
+  }
+
+  .ll-choice:has(input:focus-visible) {
+    outline: 2px solid var(--ll-primary);
+    outline-offset: 2px;
+  }
+
+  .ll-choice input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  [x-cloak] {
+    display: none !important;
+  }
+}

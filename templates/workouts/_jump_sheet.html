@@ -1,0 +1,49 @@
+{% load icons %}
+<section class="ll-card" aria-labelledby="jump-title">
+  <div class="flex items-center justify-between gap-2">
+    <h1 id="jump-title" class="text-lg font-semibold">Jump to exercise</h1>
+    <a
+      href="{% url 'session_run' session.pk %}"
+      hx-get="{% url 'session_run' session.pk %}"
+      hx-target="#runner"
+      hx-swap="outerHTML"
+      class="btn btn-ghost btn-square h-11 min-h-11 w-11"
+      aria-label="Close jump sheet"
+    >
+      {% icon "x" css_class="size-5" %}
+    </a>
+  </div>
+  <p class="mt-1 text-[13px] text-base-content/60">Jumping only changes this workout, not the plan.</p>
+
+  {% if jump_exercises %}
+    <div class="mt-4 divide-y divide-base-300">
+      {% for exercise in jump_exercises %}
+        <div class="flex items-center gap-2 py-2">
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-x-2">
+              {% if exercise.superset_group %}
+                <span class="rounded bg-accent/15 px-1.5 py-0.5 text-[11px] font-bold text-accent">{{ exercise.superset_group }}</span>
+              {% endif %}
+              <span class="truncate text-[15px] font-medium">{{ exercise.exercise.name }}</span>
+            </div>
+            <p class="mt-0.5 text-[12px] text-base-content/50">
+              {{ exercise.target_summary }} · {{ exercise.logged_count }}/{{ exercise.target_sets }} sets
+            </p>
+          </div>
+          {% if session_exercise and exercise.pk == session_exercise.pk %}
+            <span class="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">NOW</span>
+          {% else %}
+            <form method="post" action="{% url 'session_jump' session.pk exercise.pk %}" hx-post="{% url 'session_jump' session.pk exercise.pk %}" hx-target="#runner" hx-swap="outerHTML" hx-disabled-elt="find button">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-neutral h-11 min-h-11 px-4 text-[14px] font-semibold">Jump</button>
+            </form>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="mt-4 rounded-xl bg-base-200 px-3 py-3 text-[14px] text-base-content/60">
+      There are no remaining exercises to jump to.
+    </p>
+  {% endif %}
+</section>

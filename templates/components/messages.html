@@ -1,0 +1,18 @@
+{% comment %}
+Messages region. Pass ``oob=True`` to render it as an out-of-band swap for
+HTMX partial responses. The wrapper is always present so a later OOB response
+can clear or replace it.
+{% endcomment %}
+<div
+  id="messages"
+  class="space-y-2{% if messages %} mb-4{% endif %}"
+  role="status"
+  aria-live="polite"
+  {% if oob %}hx-swap-oob="true"{% endif %}
+>
+  {% for message in messages %}
+    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
