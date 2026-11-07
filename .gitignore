@@ -22,6 +22,7 @@ static/css/app.css
 .env
 .env.*
 !.env.example
+k8s/secrets.yaml
 
 # OS / editors
 .DS_Store

@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: liftlist
+  namespace: liftlist
+  labels:
+    app.kubernetes.io/name: liftlist
+spec:
+  rules:
+    - host: liftlist.naterobertstech.com
+      http:
+        paths:
+          - pathType: Prefix
+            path: /
+            backend:
+              service:
+                name: liftlist
+                port:
+                  number: 8000

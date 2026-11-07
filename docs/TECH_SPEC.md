@@ -76,7 +76,10 @@ liftlist/
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── configmap.yaml
-│   └── secret.example.yaml
+│   ├── ingress.yaml          # Traefik host rule; TLS ends at Cloudflare
+│   ├── secret.example.yaml   # Committed template (Secret name app-secrets-example)
+│   ├── secrets.yaml          # Real Secret, gitignored, server-only
+│   └── README.md             # Apply order and secret workflow
 ├── .github/workflows/
 │   ├── ci.yml                # Ruff + pytest on PRs and pushes
 │   └── docker-publish.yml    # Build + push to Docker Hub on main/tags
@@ -519,13 +522,16 @@ exec gunicorn liftlist.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN
 ### 10.3 Kubernetes (prod)
 
 - `Deployment`:
-  - 1 replica, image `<dockerhub-user>/liftlist:<tag>`
+  - 1 replica, `strategy: Recreate` so a rollout never runs two `migrate` calls at once
+  - image `<dockerhub-user>/liftlist:<tag>`
   - env from `ConfigMap` (non-secret) and `Secret` (secret key, `DATABASE_URL`, superuser)
-  - `readinessProbe` and `livenessProbe` on `GET /healthz/`
+  - `readinessProbe` and `livenessProbe` on `GET /healthz/`, with `Host: <public-host>` so Django's `ALLOWED_HOSTS` accepts the kubelet request (the probe otherwise sends the pod IP and gets a 400)
   - resources: requests 100m CPU / 192Mi, limits 500m / 512Mi
-- `Service`: ClusterIP on port 8000, exposed via the Cloudflare tunnel per the friendfitter setup.
-- Postgres on the host: a dedicated database `liftlist` and role `liftlist`. `DATABASE_URL` points to the host address reachable from the cluster.
-- Migrations run at container start. With 1 replica this is safe. If replicas are ever > 1, move migrations to a k8s `Job` or initContainer (ADR required).
+- `Service`: ClusterIP on port 8000.
+- `Ingress`: `k8s/ingress.yaml` routes `<public-host>` to the Service. No TLS block; Cloudflare terminates TLS and the tunnel forwards to Traefik on `http://localhost:80`.
+- `Secret`: `app-secrets` in the `liftlist` namespace. `k8s/secret.example.yaml` is the committed template (Secret name `app-secrets-example`); the real `k8s/secrets.yaml` is gitignored. Apply it explicitly and never run `kubectl apply -f k8s/`.
+- Postgres on the host: a dedicated database `liftlist` and role. `DATABASE_URL` is a standard libpq connection string (`postgres://user:pass@host:5432/liftlist`, optional `?sslmode=...`) pointing at the host address reachable from the cluster. Allow the pod CIDR in `pg_hba.conf` and ensure the role owns the database (or has `CREATE` on the `public` schema).
+- Migrations run at container start. `Recreate` keeps this safe for one replica. If replicas are ever > 1, move migrations to a k8s `Job` or initContainer (ADR required).
 
 ### 10.4 CI/CD (GitHub Actions)
 

@@ -62,11 +62,21 @@ Open <http://localhost:8000>. The stack runs the app image and `postgres:16` wit
 ## Deployment
 
 - The image is built by `.github/workflows/docker-publish.yml` and pushed to `docker.io/nater55/liftlist`.
-- Kubernetes manifests live in `k8s/` (namespace `liftlist`, secret `app-secrets`).
-- Postgres runs on the host; set `DATABASE_URL` in the Secret.
-- Ingress is provided by the existing Cloudflare Tunnel setup.
+- Kubernetes manifests live in `k8s/` (namespace `liftlist`, Service `liftlist`, Secret `app-secrets`).
+- `k8s/ingress.yaml` routes `liftlist.naterobertstech.com` to the Service. The Cloudflare Tunnel points at Traefik on `http://localhost:80`; Cloudflare terminates TLS.
+- Postgres runs on the host. `DATABASE_URL` is a standard libpq connection string, for example `postgres://ll_user:password@100.86.17.28:5432/liftlist`. Allow the pod CIDR in `pg_hba.conf`.
+- Copy `k8s/secret.example.yaml` to `k8s/secrets.yaml`, rename the Secret to `app-secrets`, fill in the values, and apply it explicitly. `k8s/secrets.yaml` is gitignored.
+- The probes send `Host: liftlist.naterobertstech.com` so Django's `ALLOWED_HOSTS` accepts the kubelet request; without it `/healthz/` returns 400.
+- The single replica uses `strategy: Recreate` so a rollout never runs two `migrate` calls at once.
 
-See `docs/TECH_SPEC.md` §10 for details.
+```bash
+kubectl create namespace liftlist
+cp k8s/secret.example.yaml k8s/secrets.yaml   # edit, rename to app-secrets, fill values
+kubectl apply -f k8s/secrets.yaml
+kubectl apply -f k8s/configmap.yaml -f k8s/service.yaml -f k8s/deployment.yaml -f k8s/ingress.yaml
+```
+
+See `k8s/README.md` and `docs/TECH_SPEC.md` §10 for details.
 
 ## Project layout
 
@@ -82,7 +92,7 @@ static/src/        Tailwind entry (input.css)
 static/vendor/     HTMX, Alpine, DaisyUI (pinned, vendored)
 static/img/icons/  PWA icons
 tests/             pytest suite
-k8s/               Deployment, Service, ConfigMap, Secret example
+k8s/               Deployment, Service, ConfigMap, Ingress, Secret example (real secrets.yaml is gitignored)
 seed/              Exercise seed data
 docs/              PRD, design guide, technical spec, ADRs, implementation plans
 ```

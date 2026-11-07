@@ -42,6 +42,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Library services (`apps/exercises/services/library.py`) for listing, grouping, name validation, and create/update/archive/restore, with unit tests; model, form, view, user-isolation, and seed-command tests.
 
 ### Changed
+- Deployment: added `k8s/ingress.yaml` (Traefik host rule, no TLS block because Cloudflare terminates TLS), made both probes send `Host: liftlist.naterobertstech.com` so Django's `ALLOWED_HOSTS` accepts the kubelet request, switched the single replica to `strategy: Recreate` to avoid concurrent migrations, and documented the gitignored `k8s/secrets.yaml` workflow alongside the committed `k8s/secret.example.yaml`.
 - ADR 0006 records the M4 split: tag CRUD, history filters, session creation, and destructive confirmations use full-page POST/redirect flows, while only set editing adds an HTMX row swap. Fragment branches are gated on `HX-Target` so boosted navigation always receives a full page.
 - TECH_SPEC §4.2–4.9, §5, and §6 now describe the unscheduled/retro/history/tag services, the new routes, the full-page flows, the `HX-Target` rule, and the timer-sound preference.
 - Settings now treats default tags as first-class preferences, and History is a real destination instead of a placeholder.
