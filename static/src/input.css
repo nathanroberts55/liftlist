@@ -332,6 +332,137 @@
     opacity: 0;
   }
 
+  .ll-tag-chip {
+    display: inline-flex;
+    min-height: 1.5rem;
+    align-items: center;
+    border-radius: 9999px;
+    background-color: color-mix(in srgb, var(--tag-color) 16%, transparent);
+    padding: 0 0.5rem;
+    color: var(--tag-color);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .ll-tag-chip--compact {
+    min-height: 1.25rem;
+    padding: 0 0.375rem;
+    font-size: 11px;
+  }
+
+  .ll-tag-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    flex: none;
+    border-radius: 9999px;
+    background-color: var(--tag-color);
+  }
+
+  .ll-status-dot {
+    display: inline-block;
+    width: 0.625rem;
+    height: 0.625rem;
+    flex: none;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+  }
+
+  .ll-status-dot[data-status="COMPLETED"] {
+    background-color: var(--ll-success);
+  }
+
+  .ll-status-dot[data-status="MISSED"] {
+    background-color: var(--ll-danger);
+  }
+
+  .ll-status-dot[data-status="MADE_UP"] {
+    border: 2px solid var(--ll-accent);
+  }
+
+  .ll-status-dot[data-status="UNSCHEDULED"] {
+    background-color: var(--ll-info);
+  }
+
+  .ll-status-dot[data-status="PENDING"] {
+    border-color: color-mix(in srgb, var(--ll-text) 45%, transparent);
+  }
+
+  .ll-calendar-day {
+    display: flex;
+    min-height: 3.25rem;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.125rem;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    padding: 0.375rem 0.125rem;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .ll-calendar-day:hover {
+    background-color: var(--ll-surface-2);
+  }
+
+  .ll-calendar-day[aria-current="true"] {
+    border-color: var(--ll-primary);
+    background-color: var(--ll-primary-soft);
+    color: var(--ll-text);
+  }
+
+  .ll-calendar-day--outside {
+    color: color-mix(in srgb, var(--ll-text-muted) 55%, transparent);
+  }
+
+  .ll-calendar-dots {
+    display: flex;
+    min-height: 0.625rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1875rem;
+  }
+
+  .tag-color-option {
+    position: relative;
+    display: flex;
+    min-height: 2.75rem;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--ll-border);
+    border-radius: 0.75rem;
+    background-color: var(--ll-surface-2);
+    padding: 0.5rem;
+  }
+
+  .tag-color-option::before {
+    content: "";
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 9999px;
+    background-color: var(--tag-color);
+  }
+
+  .tag-color-option:has(input:checked) {
+    border-color: var(--tag-color);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--tag-color) 35%, transparent);
+  }
+
+  .tag-color-option:has(input:focus-visible) {
+    outline: 2px solid var(--ll-primary);
+    outline-offset: 2px;
+  }
+
+  .tag-color-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
   [x-cloak] {
     display: none !important;
   }

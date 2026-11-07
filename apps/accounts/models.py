@@ -19,6 +19,12 @@ class UserSettings(models.Model):
     )
     theme = models.CharField(max_length=10, choices=Theme.choices, default=Theme.DARK)
     default_rest_seconds = models.PositiveSmallIntegerField(default=90)
+    timer_sound = models.BooleanField(default=True)
+    default_tags = models.ManyToManyField(
+        "workouts.Tag",
+        blank=True,
+        related_name="default_for_settings",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

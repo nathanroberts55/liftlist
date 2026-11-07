@@ -16,20 +16,25 @@ def test_authenticated_user_sees_the_app_shell(client, user):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    ("url_name", "copy"),
-    [
-        ("history", b"Workout history is coming"),
-        ("stats", b"Progress charts are coming"),
-    ],
-)
-def test_nav_destinations_render_placeholders(client, user, url_name, copy):
+def test_stats_is_still_a_placeholder(client, user):
     client.force_login(user)
 
-    response = client.get(reverse(url_name))
+    response = client.get(reverse("stats"))
 
     assert response.status_code == 200
-    assert copy in response.content
+    assert b"Progress charts are coming" in response.content
+
+
+@pytest.mark.django_db
+def test_history_is_no_longer_a_placeholder(client, user):
+    client.force_login(user)
+
+    response = client.get(reverse("history"))
+
+    assert response.status_code == 200
+    assert b"Workout history is coming" not in response.content
+    assert b"History" in response.content
+    assert b"Nothing recorded for this day." in response.content
 
 
 @pytest.mark.django_db

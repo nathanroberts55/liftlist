@@ -293,7 +293,6 @@ Business logic lives in `apps/<app>/services/*.py` as plain functions. Views sta
 ### 4.2 `workouts/services/runner.py`
 
 - `start_scheduled_session(user, scheduled_workout) -> Session`: enforce a single in-progress session; snapshot PlanItems → SessionExercises (`planned_sets = target_sets`).
-- `start_unscheduled_session(user, title, tags, items) -> Session`.
 - `next_step(session) -> Step | None`: pure function over the session's exercises and logged sets. Returns `Step(session_exercise, set_number, is_superset, superset_label, round_number, total_rounds, rest_after_seconds)`. Algorithm:
   1. Walk SessionExercises by `order`, grouping contiguous items with the same non-blank `superset_group` into blocks.
   2. The first block with any exercise having remaining sets (`logged_count < target_sets` and status not SKIPPED) is current.
@@ -308,7 +307,31 @@ Business logic lives in `apps/<app>/services/*.py` as plain functions. Views sta
 - `finish_session(session, now)`: records `SKIPPED` for every remaining planned set, marks an exercise `DONE` when it has at least one completed set and `SKIPPED` otherwise, sets status COMPLETED and `completed_at`, then calls `resolve_status_on_complete`.
 - `discard_session(session, today)`: hard-deletes the in-progress session and recomputes the linked ScheduledWorkout status (`PENDING` or `MISSED`).
 
-### 4.3 `workouts/services/progression.py`
+### 4.3 `workouts/services/sessions.py`
+
+- `start_unscheduled_session(user, *, title, tag_ids=(), items) -> Session`: validates the title and at least one exercise, applies default tags when none are passed, snapshots each item into a `SessionExercise`, and creates an `IN_PROGRESS` unscheduled session. A second in-progress session is refused.
+- `create_retro_session(user, *, title, performed_date, start_time=None, duration_seconds=None, tag_ids=(), items) -> Session`: records a completed `is_retro_log` session for today or a past date; future dates are rejected. `started_at`/`completed_at` are derived from the date, optional start time, and duration.
+- `update_session_metadata(user, session, *, title, performed_date, tag_ids=())`: renames, re-dates, and re-tags a session, then calls `scheduling.recompute_status_after_session_change` when the performed date moves so the linked `ScheduledWorkout` becomes `COMPLETED`, `MADE_UP`, `PENDING`, or `MISSED` as appropriate.
+- `delete_session(user, session, *, today=None)`: deletes a session and recomputes its linked `ScheduledWorkout` status.
+- `add_manual_set(user, session, session_exercise, data) -> SetLog`: appends the next set number after the last existing set; a set beyond `target_sets` is flagged `is_extra`; marks the exercise `DONE`.
+- `update_manual_set(user, set_log, data) -> SetLog` and `delete_manual_set(user, set_log)`: edit or remove a set from a completed session. Delete renumbers the remaining sets and recomputes the exercise status.
+- Every function asserts the session, exercise, or set belongs to `user`.
+
+### 4.4 `workouts/services/tags.py`
+
+- `TAG_PALETTE`: the DESIGN chart palette (blue, cyan, amber, green, purple, pink, brown, gray).
+- `list_tags(user)` returns tags annotated with `session_count`; `get_tag`, `create_tag`, `update_tag`, and `delete_tag` are user-scoped.
+- `resolve_tags(user, tag_ids)` validates that every id belongs to the user before attaching tags to a session.
+- `default_tags(user)` / `set_default_tags(user, tag_ids)` read and write `UserSettings.default_tags`.
+
+### 4.5 `workouts/services/history.py`
+
+- `list_sessions(user, *, tag=None, exclude_tag=None, plan=None)`: completed sessions, newest first, with tag and plan filters.
+- `calendar_month(user, year, month, *, tag=None, exclude_tag=None, plan=None, today)`: a Monday-start month grid with per-day status dots (`COMPLETED`, `MISSED`, `MADE_UP`, `PENDING`, `UNSCHEDULED`) plus the entries for each day.
+- `build_history(user, *, view, year, month, selected_day, tag, exclude_tag, plan, today)`: resolves the visible month, the selected day, its scheduled workouts and sessions, and the filter labels used by the template.
+- A make-up session is dotted `MADE_UP` on its original scheduled date and `COMPLETED` on the date it was performed. Tag filters apply to sessions; when a tag filter is active, scheduled workouts are limited to those with a matching session.
+
+### 4.6 `workouts/services/progression.py`
 
 - `last_time(user, exercise, plan_day=None, *, exclude_session=None) -> SessionExercise | None`: the most recent COMPLETED session's SessionExercise for the exercise, preferring the same `plan_day`, excluding the current session.
 - `prefill(user, session_exercise, set_number) -> dict`: rules in PRD F-07. Targets are the fallback when there is no history; the same set number is preferred, otherwise the last completed set's weight.
@@ -316,16 +339,16 @@ Business logic lives in `apps/<app>/services/*.py` as plain functions. Views sta
 - `flag_for_upcoming(user, exercise, plan_day) -> bool` = `increase_flag(last_time(...))`.
 - `last_time_display(user, session_exercise) -> str`: compact `Last:` values per tracking type for the set screen.
 
-### 4.4 `workouts/services/records.py`
+### 4.7 `workouts/services/records.py`
 
 - `prs_for_exercise(user, exercise)`: heaviest weight, plus the max reps per weight.
 - `prs_set_in_session(session) -> list[PR]`: compare each DONE set with all DONE sets from sessions with an earlier `(performed_date, completed_at)` order. Rules in PRD F-10. Computed on demand, not stored.
 
-### 4.5 `workouts/services/summary.py`
+### 4.8 `workouts/services/summary.py`
 
 `build_summary(session) -> Summary` dataclass with all PRD F-08 fields. Tonnage counts DONE sets of type `WEIGHT_REPS` (weight × reps). Comparison session: the previous COMPLETED session with the same `plan_day` (scheduled) or same `title` (unscheduled).
 
-### 4.6 `stats/services/aggregations.py`
+### 4.9 `stats/services/aggregations.py`
 
 - `top_set_series(user, exercise, since)`: per session date, the max weight (with its reps).
 - `weekly_volume(user, weeks=8, metric="sets"|"tonnage", tag_include=None, tag_exclude=None)`: grouped by ISO week (Monday start) × primary muscle group. Use `TruncWeek` on `performed_date`.
@@ -341,8 +364,9 @@ All views use `LoginRequiredMixin` / `@login_required` except login and healthz.
 | GET | `/` | today | Calls `sync_statuses`. |
 | GET/POST | `/login/`, `/logout/` | Django auth | |
 | GET | `/healthz/` | healthz | 200 + DB check. No auth. |
-| GET/POST | `/settings/` | settings | Theme, rest, sound, default tags. |
-| * | `/settings/tags/…` | tag CRUD | HTMX partials. |
+| GET/POST | `/settings/` | settings | Theme, rest, sound, default tags, tag management, and change-password link. |
+| GET/POST | `/settings/password/` | change password | Django's password-change form with the app's input styling. |
+| GET/POST | `/settings/tags/new/`, `/settings/tags/<id>/edit/`, `/settings/tags/<id>/delete/` | tag CRUD | Full-page POST/redirect flows so Settings always sees fresh tag and default-tag choices. Delete renders a confirmation page and posts `confirm=1`. |
 | GET | `/library/` | exercise list | `?q=`, `?muscle=`, `?archived=1` |
 | GET/POST | `/library/new/`, `/library/<id>/edit/` | exercise form | Seeded exercises are read-only. |
 | GET | `/library/<id>/` | exercise detail | |
@@ -360,16 +384,20 @@ All views use `LoginRequiredMixin` / `@login_required` except login and healthz.
 | GET | `/plans/<id>/picker/?day=<id>&q=` | exercise picker partial | Focus-group-first sorting; HTMX partial. |
 | POST | `/schedule/<id>/start/` | start scheduled session | Creates the session (or resumes the one in progress) and redirects to the runner. |
 | POST | `/schedule/<id>/mark-missed/` | mark today's workout missed | |
-| GET/POST | `/sessions/new/` | plan & start unscheduled | M4. |
-| GET/POST | `/sessions/log/` | retro log form | M4. |
+| GET/POST | `/sessions/new/` | plan & start unscheduled | Title, tags, and exercise rows with targets. `add_row` re-renders the bound formset with one more row; Start creates an in-progress session and redirects to the runner. |
+| GET/POST | `/sessions/log/` | retro log form | Title, date, optional start time/duration, tags, and exercise rows. Creates a completed `is_retro_log` session and redirects to its detail page for set entry. |
 | GET | `/sessions/<id>/run/` | runner page | Renders the current step or completion card. `?panel=menu|reorder|jump|add` renders a sheet; HTMX returns only `#runner`. |
 | POST | `/sessions/<id>/sets/` | log set | HTMX: rest overlay plus the next step, or the completion card. Plain POST: redirect with rest skipped. |
 | POST | `/sessions/<id>/skip-set/`, `/add-set/`, `/skip-exercise/`, `/add-exercise/`, `/reorder/`, `/move-exercise/`, `/jump/<se_id>/` | runner actions | Each returns `#runner` for HTMX and redirects otherwise. |
 | GET | `/sessions/<id>/picker/?q=` | exercise picker partial | HTMX search for the add-exercise sheet. |
 | POST | `/sessions/<id>/finish/`, `/discard/` | | Finish returns the completion card (or redirects). Discard asks for a server-rendered confirmation page first. |
-| GET | `/sessions/<id>/` | summary / detail | M4. |
-| GET/POST | `/sessions/<id>/edit/`, `/sets/<id>/edit/`, `/sets/<id>/delete/` | history editing | HTMX inline. |
-| GET | `/history/` | calendar/list | `?view=calendar|list&month=YYYY-MM&tag=&exclude_tag=&plan=` |
+| GET | `/sessions/<id>/` | summary / detail | Shows the session's snapshot targets, tags, sets, and edit/delete actions. An in-progress session links to the runner instead of showing set forms. |
+| GET/POST | `/sessions/<id>/edit/`, `/sessions/<id>/delete/` | session metadata editing | Edit changes title, performed date, and tags. Delete renders a confirmation page and posts `confirm=1`. |
+| POST | `/sessions/<id>/sets/add/` | add a set | Full-page POST + redirect to the session detail; appends the next set number. |
+| GET/POST | `/sets/<id>/edit/` | edit a set | HTMX targets `#set-<id>` for an inline row swap; a full-page GET and POST are always available. |
+| GET | `/sets/<id>/row/` | set row partial | Cancels an inline edit by restoring the read-only row. |
+| GET/POST | `/sets/<id>/delete/` | delete a set | Confirmation page; renumbers the remaining sets. |
+| GET | `/history/` | calendar/list | `?view=calendar|list&month=YYYY-MM&day=YYYY-MM-DD&tag=&exclude_tag=&plan=`. Tag filters apply to sessions; a tag filter limits scheduled workouts to those with a matching session. |
 | GET | `/stats/` | stats tabs | `?tab=progress|prs|volume` |
 | GET | `/stats/api/…` | JSON for Chart.js | Small JSON views, login required. |
 | GET | `/manifest.webmanifest` | manifest | |
@@ -389,8 +417,12 @@ All views use `LoginRequiredMixin` / `@login_required` except login and healthz.
   Swap targets:
   - `#day-items-<day_id>` for ▲▼ move, drag reorder, superset create, and superset clear. Only the items region is replaced, so the day header and an open “Edit day and focus” panel keep their state.
   - `#today-content` for “Mark as missed”, which can change the today card, catch-up list, and week strip together.
+  - `#set-<set_id>` for editing a set from the session detail; `#library-list` for the library search form.
+
+  **Gate fragment responses on `HX-Target`, not just `request.htmx`.** `hx-boost` makes ordinary navigation look like an HTMX request, so a view that returns a partial for every `request.htmx` would replace the whole page with a fragment. A view returns its partial only when `request.headers.get("HX-Target")` matches the intended container (for example `library-list` or `runner`); boosted page requests get the full template.
 
   Action buttons keep stable IDs (`move-up-<item_id>`, `move-down-<item_id>`, `superset-<day_id>`, `clear-superset-<day_id>-<group>`, `mark-missed`) so htmx restores focus after a swap. `hx-disabled-elt` disables the control in flight; `find button` covers move forms and `#superset-<day_id>` covers the superset button that lives outside its hidden form. Because disabling the pressed control moves focus to the document, `htmx-focus.js` remembers the active element's `id` on `htmx:beforeRequest` and restores it on `htmx:afterSettle`.
+- **Full-page flows stay full-page.** Tag CRUD, history filters, the unscheduled/retro forms, and session deletion use ordinary POST/redirect responses even when HTMX is present, because they change data that the Settings or History page must re-read (tag choices, default-tag chips, calendar dots). Only the set row editor and library search add a fragment branch.
 - `templates/components/messages.html` renders the `#messages` wrapper on every page. `messages_oob.html` renders the same block with `hx-swap-oob="true"` and is included only in partial responses, never in a full page.
 - Partials are named `_name.html` and live beside their page template.
 - Component includes live in `templates/components/` (`button.html`, `stepper.html`, `badge.html`, `sheet.html`, `status_dot.html`, `tag_chip.html`, `empty_state.html`).
@@ -401,7 +433,7 @@ All views use `LoginRequiredMixin` / `@login_required` except login and healthz.
   - `endAt = Date.now() + rest*1000`, ticks every 250 ms, displays `max(0, ceil((endAt − now)/1000))`
   - ±15 s adjusts `endAt`; Skip calls the same finish path immediately
   - counting from a fixed end time means a throttled background tab returns to the correct remaining time, or advances if the rest already elapsed
-- **Sound** (`static/js/sound.js`): Web Audio API, two short 880 Hz beeps. Create/resume the `AudioContext` on the Submit tap (iOS requires a user gesture). M3 beeps on rest completion; the sound preference UI arrives with F-11.
+- **Sound** (`static/js/sound.js`): Web Audio API, two short 880 Hz beeps. Create/resume the `AudioContext` on the Submit tap (iOS requires a user gesture). The rest timer beeps on completion when `UserSettings.timer_sound` is on; the toggle in Settings controls it.
 - **Validation errors:** `ValidationError` from a runner service adds a message and returns the same `#runner` fragment with `save_failed=True`, which renders a Retry save button and keeps the submitted values. A plain POST redirects and shows the message; the fields fall back to their pre-filled values. HTMX transport errors are left to the browser instead of a separate error card.
 - **Idempotency:** `_set_form.html` renders a hidden `client_id` (`uuid4`) per step. A replayed submit returns the existing `SetLog` rather than creating a duplicate.
 - **Drag-and-drop:** SortableJS on plan day columns and the runner reorder sheet. On `onEnd`, POST the ordered ids with HTMX. Provide ▲▼ buttons everywhere as the fallback. `plan-reorder.js` loads once for authenticated pages, initializes each `[data-sortable]` container once (`data-sortable-ready`), and re-initializes inside the swapped target on `htmx:afterSwap`.

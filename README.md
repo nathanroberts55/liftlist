@@ -4,7 +4,7 @@ Self-hosted, mobile-first web app for planning workout splits, running workouts 
 
 Built with Django 5.2, server-rendered templates, HTMX, Alpine.js, Tailwind CSS v4 (standalone CLI), and DaisyUI 5. No Node toolchain is required.
 
-**Status:** M3 workout runner and progression — authentication, theme, installable PWA, `/healthz/`, the app shell, a seeded exercise library, the plan builder with scheduling and the Today screen, and the workout runner (set logging, supersets, rest timer, skip/add/reorder/jump, finish/discard, pre-fill from history, and the increase flag). History, summary, stats, and tags arrive in later milestones (see `docs/PRD.md` §12).
+**Status:** M4 history, tags, and editing — authentication, theme, installable PWA, `/healthz/`, the app shell, a seeded exercise library, the plan builder with scheduling and the Today screen, the workout runner, unscheduled and retroactive sessions, tags, Settings additions, and a calendar/list history with session and set editing. Summary, PRs, and stats arrive in later milestones (see `docs/PRD.md` §12).
 
 ## Local development (SQLite)
 
@@ -76,7 +76,7 @@ apps/core/         Today, health check, PWA manifest, nav
 apps/accounts/     UserSettings, login/settings routes, ensure_superuser
 apps/exercises/    MuscleGroup, Exercise, ExerciseArchive, library services/views
 apps/plans/        Plan, PlanDay, PlanItem, ScheduledWorkout, builder/scheduling/Today services
-apps/workouts/     Tag, Session, SessionExercise, SetLog, runner/progression services, runner views
+apps/workouts/     Tag, Session, SessionExercise, SetLog, unscheduled/history/tag services, runner and history views
 templates/         base.html, components, page templates
 static/src/        Tailwind entry (input.css)
 static/vendor/     HTMX, Alpine, DaisyUI (pinned, vendored)

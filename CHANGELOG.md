@@ -6,6 +6,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased]
 
 ### Added
+- Unscheduled sessions (F-06): `/sessions/new/` plans and starts a workout with a title, tags, and type-aware exercise targets. “Add another exercise” re-renders the bound form without JavaScript, and **Start workout** creates an in-progress unscheduled session in the runner. Today gains an “On your own” section with plan-and-start and retro-log entry points; plan-and-start is hidden while another workout is in progress.
+- Retroactive logging (F-06): `/sessions/log/` records a completed past workout with title, date, optional start time and duration, tags, and exercises. Future dates are rejected; the detail page then accepts sets.
+- Tags (F-06): user-scoped tag CRUD on Settings using the DESIGN chart palette, duplicate-name protection ignoring case, per-tag workout counts, default tags pre-selected on new sessions, and tag chips/status-dot components with theme-driven colors.
+- History (F-09): `/history/` calendar and list views with a Monday-start month grid, completed/missed/made-up/pending/unscheduled dots, day detail, tag include/exclude filters, and plan filters. Filter state survives month navigation.
+- History editing (F-09): session detail, title/date/tag editing, add/edit/delete sets with an HTMX row swap and full-page fallback, session deletion behind a confirmation page, and scheduled-workout status recalculation after a date change or deletion.
+- Settings (F-11): timer sound toggle, default tag chips, tag management, and a styled change-password screen.
+- Tests for tag services and CRUD, unscheduled and retro flows, session/set editing, status recalculation, history calendar/list/filters/day detail, HTMX partials, and user isolation across the new routes.
 - Workout runner (F-05): `Tag`, `Session`, `SessionExercise`, and `SetLog` models; target snapshots at start; one in-progress session per user; and a server-rendered `#runner`. Logs one set at a time with type-specific fields for weight/reps, bodyweight, timed, cardio, and weight/distance, plus difficulty 1–10. Includes superset rotation with per-round rest, a rest timer with +15/−15/skip and an audible rest beep, skip/add set, skip/add exercise, reorder (drag + ▲▼), jump ahead, finish early with the remaining planned sets recorded as skipped, and discard behind a confirmation page.
 - Progression (F-07): the `Last:` line, pre-fill from the same set number when available, same-Plan-Day preference, and the “Ready to increase” flag on Today, the set screen, and the completion card. The flag requires every planned set to reach the rep max.
 - Today entry points: Start workout, Start catch-up for a missed workout, and a resume banner for the one session in progress.
@@ -35,6 +42,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Library services (`apps/exercises/services/library.py`) for listing, grouping, name validation, and create/update/archive/restore, with unit tests; model, form, view, user-isolation, and seed-command tests.
 
 ### Changed
+- ADR 0006 records the M4 split: tag CRUD, history filters, session creation, and destructive confirmations use full-page POST/redirect flows, while only set editing adds an HTMX row swap. Fragment branches are gated on `HX-Target` so boosted navigation always receives a full page.
+- TECH_SPEC §4.2–4.9, §5, and §6 now describe the unscheduled/retro/history/tag services, the new routes, the full-page flows, the `HX-Target` rule, and the timer-sound preference.
+- Settings now treats default tags as first-class preferences, and History is a real destination instead of a placeholder.
 - ADR 0005 records the runner step engine, the server-rendered rest overlay with its JavaScript-off redirect, and the finish-early and discard semantics.
 - TECH_SPEC §4.2–4.3, §5, and §6: runner service signatures, routes, the `#runner` `outerHTML` swap, validation handling, and timer details now match M3.
 - M2 polish: ▲▼ moves, drag reorder, and superset create/clear now swap only `#day-items-<day_id>`, and Today “Mark as missed” swaps `#today-content`, so the page no longer blanks or jumps. Partial responses carry out-of-band messages, action controls keep stable IDs, disable in flight, and restore keyboard focus after the swap, and SortableJS re-initializes after a swap without double-binding. Authenticated navigation and non-destructive forms use `hx-boost`; logout, delete, activate, archive, confirmation forms, and fragment-saving forms stay full-page. ADR 0004 records the partial-response contract.
@@ -50,4 +60,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Library navigation via the app shell no longer replaces the whole page with the exercise list fragment. The boosted page request now renders the full Library page with the top bar, bottom tab bar, and sidebar; the HTMX list fragment is returned only when the search form targets `#library-list`.
 
 ### Notes
-- M0–M3 cover the scaffold, the exercise library, plan building and scheduling, and the workout runner with progression. History, summary, stats, and tags arrive in later milestones.
+- M0–M4 cover the scaffold, the exercise library, plan building and scheduling, the workout runner with progression, unscheduled and retroactive sessions, tags, Settings additions, and history with editing. Summary, PRs, and stats arrive in later milestones.

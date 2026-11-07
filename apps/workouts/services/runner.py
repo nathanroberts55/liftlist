@@ -206,7 +206,7 @@ def _ensure_belongs(session: Session, session_exercise: SessionExercise) -> None
         raise ValidationError("That exercise is not part of this workout.")
 
 
-def _refresh_status(session_exercise: SessionExercise) -> None:
+def refresh_status(session_exercise: SessionExercise) -> None:
     logs = list(session_exercise.sets.all())
     if len(logs) < session_exercise.target_sets:
         status = SessionExercise.Status.IN_PROGRESS
@@ -259,7 +259,7 @@ def log_set(
         completed_at=timezone.now(),
         **values,
     )
-    _refresh_status(session_exercise)
+    refresh_status(session_exercise)
     return log
 
 
@@ -281,7 +281,7 @@ def skip_set(session: Session, session_exercise: SessionExercise, client_id=None
         client_id=client_id or uuid.uuid4(),
         completed_at=timezone.now(),
     )
-    _refresh_status(session_exercise)
+    refresh_status(session_exercise)
     return log
 
 

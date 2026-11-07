@@ -1,0 +1,37 @@
+{% load icons %}
+{% comment %}
+The inline set editor. It replaces the row in place with HTMX, while the link
+target and plain form action keep the full-page edit path working without JS.
+{% endcomment %}
+<div id="set-{{ set_log.pk }}" class="rounded-xl border border-primary/40 bg-primary/5 p-3">
+  <form
+    method="post"
+    action="{% url 'set_edit' set_log.pk %}"
+    hx-post="{% url 'set_edit' set_log.pk %}"
+    hx-target="#set-{{ set_log.pk }}"
+    hx-swap="outerHTML"
+    hx-disabled-elt="find button[type='submit']"
+    class="space-y-3"
+  >
+    {% csrf_token %}
+    <div class="flex items-center justify-between gap-2">
+      <p class="text-[13px] font-semibold uppercase tracking-wider text-primary">Set {{ set_log.set_number }}</p>
+      <span class="truncate text-[13px] text-base-content/50">{{ set_log.session_exercise.exercise.name }}</span>
+    </div>
+
+    {% include "workouts/_set_fields.html" with form=form tracking_type=set_log.session_exercise.exercise.tracking_type %}
+
+    <div class="grid grid-cols-2 gap-2">
+      <button type="submit" class="btn btn-primary h-11 min-h-11 text-[15px] font-semibold">Save</button>
+      <a
+        href="{% url 'session_detail' set_log.session_exercise.session_id %}"
+        class="btn btn-ghost h-11 min-h-11 text-[15px] text-base-content/60"
+        hx-get="{% url 'set_row' set_log.pk %}"
+        hx-target="#set-{{ set_log.pk }}"
+        hx-swap="outerHTML"
+      >
+        Cancel
+      </a>
+    </div>
+  </form>
+</div>

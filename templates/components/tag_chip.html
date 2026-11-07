@@ -1,0 +1,5 @@
+{% comment %}
+A user tag as a pill. The color is data-driven through a CSS custom property so
+templates never hard-code a hex value.
+{% endcomment %}
+<span class="ll-tag-chip{% if compact %} ll-tag-chip--compact{% endif %}" style="--tag-color: {{ tag.color }}">{{ tag.name }}</span>

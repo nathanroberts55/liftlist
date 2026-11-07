@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}History · Lift List{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-[760px]">
+    <div class="flex items-center justify-between gap-3">
+      <h1 class="text-2xl font-bold">History</h1>
+      <div class="inline-flex rounded-full border border-base-300 bg-base-200 p-1" role="group" aria-label="History view">
+        <a
+          href="{{ calendar_url }}"
+          class="btn h-11 min-h-11 rounded-full px-3 text-[13px] font-semibold {% if view == 'calendar' %}bg-base-100 text-base-content shadow-sm{% else %}btn-ghost text-base-content/60{% endif %}"
+          {% if view == 'calendar' %}aria-current="page"{% endif %}
+        >
+          Calendar
+        </a>
+        <a
+          href="{{ list_url }}"
+          class="btn h-11 min-h-11 rounded-full px-3 text-[13px] font-semibold {% if view == 'list' %}bg-base-100 text-base-content shadow-sm{% else %}btn-ghost text-base-content/60{% endif %}"
+          {% if view == 'list' %}aria-current="page"{% endif %}
+        >
+          List
+        </a>
+      </div>
+    </div>
+
+    <form method="get" action="{% url 'history' %}" class="ll-card mt-4" hx-boost="false">
+      <input type="hidden" name="view" value="{{ view }}">
+      {% if view == 'calendar' %}
+        <input type="hidden" name="month" value="{{ month }}">
+        <input type="hidden" name="day" value="{{ selected_day|date:'Y-m-d' }}">
+      {% endif %}
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div>
+          <label for="filter-tag" class="mb-1.5 block text-sm font-medium">Tag</label>
+          <select id="filter-tag" name="tag" class="ll-input">
+            <option value="">All tags</option>
+            {% for tag in tags %}
+              <option value="{{ tag.pk }}" {% if filters.tag and filters.tag.pk == tag.pk %}selected{% endif %}>{{ tag.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="filter-exclude-tag" class="mb-1.5 block text-sm font-medium">Hide tag</label>
+          <select id="filter-exclude-tag" name="exclude_tag" class="ll-input">
+            <option value="">Nothing hidden</option>
+            {% for tag in tags %}
+              <option value="{{ tag.pk }}" {% if filters.exclude_tag and filters.exclude_tag.pk == tag.pk %}selected{% endif %}>{{ tag.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="filter-plan" class="mb-1.5 block text-sm font-medium">Plan</label>
+          <select id="filter-plan" name="plan" class="ll-input">
+            <option value="">All plans</option>
+            {% for plan in plans %}
+              <option value="{{ plan.pk }}" {% if filters.plan and filters.plan.pk == plan.pk %}selected{% endif %}>{{ plan.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="mt-3 flex flex-wrap items-center gap-2">
+        <button type="submit" class="btn btn-neutral h-11 min-h-11 px-4 text-[15px] font-semibold">Apply filters</button>
+        {% if filters.tag or filters.exclude_tag or filters.plan %}
+          <a href="{% url 'history' %}?view={{ view }}{% if view == 'calendar' %}&month={{ month }}{% endif %}" class="btn btn-ghost h-11 min-h-11 px-3 text-[14px] text-base-content/60">
+            Clear filters
+          </a>
+        {% endif %}
+      </div>
+      {% if filters.tag or filters.exclude_tag or filters.plan %}
+        <p class="mt-2 text-[12px] text-base-content/50">
+          {% if filters.tag %}Showing {{ filters.tag.name }}.{% endif %}
+          {% if filters.exclude_tag %}Hiding {{ filters.exclude_tag.name }}.{% endif %}
+          {% if filters.plan %}Plan: {{ filters.plan.name }}.{% endif %}
+        </p>
+      {% endif %}
+    </form>
+
+    {% if view == 'calendar' %}
+      <section class="mt-6" aria-labelledby="month-heading">
+        <div class="flex items-center justify-between gap-2">
+          <a href="{{ prev_url }}" class="btn btn-ghost btn-square h-11 min-h-11 w-11" aria-label="Previous month">
+            {% icon "arrow-left" css_class="size-5" %}
+          </a>
+          <h2 id="month-heading" class="text-lg font-semibold">{{ month_label }}</h2>
+          <a href="{{ next_url }}" class="btn btn-ghost btn-square h-11 min-h-11 w-11" aria-label="Next month">
+            {% icon "chevron-right" css_class="size-5" %}
+          </a>
+        </div>
+
+        <div class="mt-2 grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-wider text-base-content/40">
+          {% for letter in weekday_letters %}<span>{{ letter }}</span>{% endfor %}
+        </div>
+        <div class="mt-1 grid grid-cols-7 gap-1">
+          {% for week in weeks %}
+            {% for day in week %}
+              <a
+                href="{{ day.url }}"
+                class="ll-calendar-day{% if not day.in_month %} ll-calendar-day--outside{% endif %}{% if day.is_today %} ring-1 ring-primary/40{% endif %}"
+                {% if day.date == selected_day %}aria-current="true"{% endif %}
+                aria-label="{{ day.date|date:'D, M j' }}{% for dot in day.dots %} · {{ dot.label }}{% endfor %}"
+              >
+                <span>{{ day.day }}</span>
+                <span class="ll-calendar-dots">
+                  {% for dot in day.dots %}
+                    {% include "components/status_dot.html" with status=dot.status label=dot.label %}
+                  {% endfor %}
+                </span>
+              </a>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="mt-6" aria-labelledby="selected-day-heading">
+        <h2 id="selected-day-heading" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">
+          {{ selected_day|date:"l, M j" }}
+        </h2>
+        {% if selected_entries %}
+          <div class="mt-2 space-y-2">
+            {% for entry in selected_entries %}
+              <a
+                href="{% if entry.session %}{% url 'session_detail' entry.session.pk %}{% else %}{% url 'plan_detail' entry.workout.plan_id %}{% endif %}"
+                class="ll-card flex items-center gap-3 p-3"
+              >
+                {% include "components/status_dot.html" with status=entry.status label=entry.status_label %}
+                <div class="min-w-0 flex-1">
+                  <p class="truncate text-[15px] font-semibold">
+                    {% if entry.session %}{{ entry.session.title }}{% else %}{{ entry.workout.plan_day.name }}{% endif %}
+                  </p>
+                  <p class="mt-0.5 text-[12px] text-base-content/50">
+                    {{ entry.status_label }}
+                    {% if entry.workout %}· {{ entry.workout.plan.name }}{% endif %}
+                    {% if entry.session and entry.session.elapsed_label %}· {{ entry.session.elapsed_label }}{% endif %}
+                  </p>
+                  {% if entry.session %}
+                    {% if entry.session.tags.all %}
+                      <div class="mt-1.5 flex flex-wrap gap-1">
+                        {% for tag in entry.session.tags.all %}
+                          {% include "components/tag_chip.html" with tag=tag compact=True %}
+                        {% endfor %}
+                      </div>
+                    {% endif %}
+                  {% endif %}
+                </div>
+                {% icon "chevron-right" css_class="size-5 shrink-0 text-base-content/30" %}
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p class="ll-card mt-2 p-4 text-[14px] text-base-content/60">
+            Nothing recorded for this day.
+          </p>
+        {% endif %}
+      </section>
+    {% else %}
+      <section class="mt-6" aria-labelledby="session-list-heading">
+        <div class="flex items-center justify-between gap-3 px-1">
+          <h2 id="session-list-heading" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">
+            Workouts{% if session_count %} · {{ session_count }}{% endif %}
+          </h2>
+          <a href="{% url 'session_log' %}" class="btn btn-ghost h-11 min-h-11 gap-1 px-2 text-[14px] text-primary">
+            {% icon "plus" css_class="size-4" %}
+            Log past
+          </a>
+        </div>
+
+        {% if sessions %}
+          <div class="mt-2 space-y-2">
+            {% for session in sessions %}
+              <a href="{% url 'session_detail' session.pk %}" class="ll-card flex items-center gap-3 p-3">
+                <div class="min-w-0 flex-1">
+                  <p class="text-[12px] font-semibold uppercase tracking-wider text-base-content/40">
+                    {{ session.performed_date|date:"D, M j, Y" }}
+                  </p>
+                  <p class="mt-0.5 truncate text-[15px] font-semibold">{{ session.title }}</p>
+                  <p class="mt-0.5 text-[12px] text-base-content/50">
+                    {% if session.kind == "UNSCHEDULED" %}Unscheduled{% elif session.scheduled_workout %}{{ session.scheduled_workout.plan.name }}{% elif session.plan_day %}{{ session.plan_day.plan.name }}{% endif %}
+                    {% if session.elapsed_label %}· {{ session.elapsed_label }}{% endif %}
+                  </p>
+                  {% if session.tags.all %}
+                    <div class="mt-1.5 flex flex-wrap gap-1">
+                      {% for tag in session.tags.all %}
+                        {% include "components/tag_chip.html" with tag=tag compact=True %}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+                {% icon "chevron-right" css_class="size-5 shrink-0 text-base-content/30" %}
+              </a>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="mt-2">
+            {% if filters.tag or filters.exclude_tag or filters.plan %}
+              {% include "components/empty_state.html" with icon="history" title="No matching workouts" message="Try a different tag or plan filter." %}
+            {% else %}
+              {% url 'session_log' as log_url %}
+              {% include "components/empty_state.html" with icon="history" title="No workouts yet" message="Finish a scheduled workout or log one that already happened." action_label="Log past workout" action_href=log_url %}
+            {% endif %}
+          </div>
+        {% endif %}
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

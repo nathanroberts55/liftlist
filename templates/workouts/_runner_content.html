@@ -100,7 +100,7 @@ header, set screen, rest overlay, and sheets always agree on server state.
       </a>
     </section>
   {% elif rest_seconds %}
-    <div x-data="runnerTimer({{ rest_seconds }})" x-init="init()">
+    <div x-data="runnerTimer({{ rest_seconds }}, {{ timer_sound|yesno:'true,false' }})" x-init="init()">
       {% include "workouts/_rest.html" %}
       <div x-ref="setPanel">
         {% include "workouts/_set_form.html" %}

@@ -1,0 +1,32 @@
+{% comment %}
+Tag picker shared by the unscheduled builder, retro log, and session edit.
+Colored chips match Settings; the hidden checkbox keeps it usable without JS.
+{% endcomment %}
+<fieldset>
+  <legend class="mb-1.5 block text-sm font-medium">
+    Tags <span class="font-normal text-base-content/50">(optional)</span>
+  </legend>
+  {% if available_tags %}
+    <div class="flex flex-wrap gap-2">
+      {% for tag in available_tags %}
+        <label class="ll-choice min-h-11 px-3" for="tag-{{ form.tags.html_name }}-{{ tag.pk }}">
+          <input
+            type="checkbox"
+            name="{{ form.tags.html_name }}"
+            value="{{ tag.pk }}"
+            id="tag-{{ form.tags.html_name }}-{{ tag.pk }}"
+            {% if tag.pk in form.selected_tag_ids %}checked{% endif %}
+          >
+          {% include "components/tag_chip.html" with tag=tag compact=True %}
+        </label>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-[13px] text-base-content/60">
+      No tags yet.
+      <a href="{% url 'tag_new' %}" class="font-semibold text-primary">Create a tag</a>
+      to group workouts like PT or cardio.
+    </p>
+  {% endif %}
+  {% for error in form.tags.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+</fieldset>

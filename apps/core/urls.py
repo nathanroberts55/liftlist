@@ -7,16 +7,6 @@ from . import views
 urlpatterns = [
     path("", views.today, name="today"),
     path(
-        "history/",
-        views.placeholder,
-        {
-            "title": "History",
-            "icon_name": "history",
-            "message": "Workout history is coming in a later milestone.",
-        },
-        name="history",
-    ),
-    path(
         "stats/",
         views.placeholder,
         {

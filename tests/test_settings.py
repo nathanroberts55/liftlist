@@ -99,6 +99,32 @@ def test_default_rest_is_capped_at_one_hour(client, user):
 
 
 @pytest.mark.django_db
+def test_timer_sound_preference_is_saved(client, user):
+    client.force_login(user)
+
+    response = client.post(
+        reverse("settings"),
+        {
+            "theme": UserSettings.Theme.DARK,
+            "default_rest_seconds": 90,
+            "timer_sound": "on",
+        },
+    )
+
+    assert response.status_code == 302
+    user.settings.refresh_from_db()
+    assert user.settings.timer_sound is True
+
+    client.post(
+        reverse("settings"),
+        {"theme": UserSettings.Theme.DARK, "default_rest_seconds": 90},
+    )
+
+    user.settings.refresh_from_db()
+    assert user.settings.timer_sound is False
+
+
+@pytest.mark.django_db
 def test_light_theme_is_applied_server_side(client, user):
     user.settings.theme = UserSettings.Theme.LIGHT
     user.settings.save()

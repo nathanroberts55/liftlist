@@ -1,0 +1,55 @@
+{% load icons %}
+{% comment %}
+One exercise row in the plan-and-start / retro-log builder. Alpine only hides
+targets that do not apply; every field still submits when JavaScript is off.
+{% endcomment %}
+<div class="rounded-2xl border border-base-300 bg-base-200/40 p-3" x-data="{ tracking: '{{ form.selected_tracking|escapejs }}' }">
+  {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+
+  <div>
+    <label for="{{ form.exercise.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.exercise.label }}</label>
+    {{ form.exercise }}
+    {% for error in form.exercise.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+  </div>
+
+  {% if form.non_field_errors %}
+    <div class="alert alert-error mt-3 items-start text-sm" role="alert">
+      <div class="space-y-1">
+        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div x-show="['WEIGHT_REPS','BODYWEIGHT','TIMED','WEIGHT_DISTANCE'].includes(tracking)">
+      <label for="{{ form.target_sets.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_sets.label }}</label>
+      {{ form.target_sets }}
+      {% for error in form.target_sets.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    <div x-show="['WEIGHT_REPS','BODYWEIGHT'].includes(tracking)">
+      <label for="{{ form.rep_min.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.rep_min.label }}</label>
+      {{ form.rep_min }}
+      {% for error in form.rep_min.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    <div x-show="['WEIGHT_REPS','BODYWEIGHT'].includes(tracking)">
+      <label for="{{ form.rep_max.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.rep_max.label }}</label>
+      {{ form.rep_max }}
+      {% for error in form.rep_max.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    <div x-show="['TIMED','CARDIO'].includes(tracking)">
+      <label for="{{ form.target_seconds.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_seconds.label }}</label>
+      {{ form.target_seconds }}
+      {% for error in form.target_seconds.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    <div x-show="['CARDIO','WEIGHT_DISTANCE'].includes(tracking)">
+      <label for="{{ form.target_distance_mi.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_distance_mi.label }}</label>
+      {{ form.target_distance_mi }}
+      {% for error in form.target_distance_mi.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="col-span-2 sm:col-span-1">
+      <label for="{{ form.rest_seconds.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.rest_seconds.label }}</label>
+      {{ form.rest_seconds }}
+      {% for error in form.rest_seconds.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+  </div>
+</div>

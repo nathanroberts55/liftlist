@@ -1,0 +1,42 @@
+{% load icons %}
+{% comment %}
+One set row. ``editable`` adds the inline edit and delete actions. The row id is
+the HTMX swap target for set editing.
+{% endcomment %}
+<div id="set-{{ set_log.pk }}" class="flex min-h-11 items-center gap-2 py-1.5">
+  <span class="w-9 shrink-0 text-[12px] font-semibold tabular-nums text-base-content/50">
+    Set {{ set_log.set_number }}
+  </span>
+  <span class="min-w-0 flex-1">
+    {% if set_log.status == "SKIPPED" %}
+      <span class="text-[14px] italic text-base-content/40">Skipped</span>
+    {% else %}
+      <span class="text-[14px] font-medium tabular-nums">{{ set_log.display_value }}</span>
+    {% endif %}
+    {% if set_log.difficulty %}
+      <span class="ml-1 inline-flex rounded-full bg-base-300 px-1.5 py-0.5 text-[10px] text-base-content/60">{{ set_log.difficulty }}/10</span>
+    {% endif %}
+    {% if set_log.is_extra %}
+      <span class="ml-1 inline-flex rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">Extra</span>
+    {% endif %}
+  </span>
+  {% if editable %}
+    <a
+      href="{% url 'set_edit' set_log.pk %}"
+      class="btn btn-ghost btn-square h-11 min-h-11 w-11"
+      aria-label="Edit set {{ set_log.set_number }}"
+      hx-get="{% url 'set_edit' set_log.pk %}"
+      hx-target="#set-{{ set_log.pk }}"
+      hx-swap="outerHTML"
+    >
+      {% icon "pencil" css_class="size-4" %}
+    </a>
+    <a
+      href="{% url 'set_delete' set_log.pk %}"
+      class="btn btn-ghost btn-square h-11 min-h-11 w-11 text-error"
+      aria-label="Delete set {{ set_log.set_number }}"
+    >
+      {% icon "trash-2" css_class="size-4" %}
+    </a>
+  {% endif %}
+</div>

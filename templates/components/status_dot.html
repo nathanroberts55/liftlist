@@ -1,0 +1,11 @@
+{% comment %}
+Status dot with a text equivalent for screen readers and tooltips. Never rely
+on color alone (DESIGN §10).
+{% endcomment %}
+<span
+  class="ll-status-dot"
+  data-status="{{ status }}"
+  role="img"
+  aria-label="{{ label }}"
+  title="{{ label }}"
+></span>

@@ -242,6 +242,29 @@ def test_log_set_htmx_returns_the_rest_screen(
     assert b"Rest" in response.content
     assert b"Skip" in response.content
     assert b"Set 2 of 4" in response.content
+    assert b"runnerTimer(120, true)" in response.content
+
+
+@pytest.mark.django_db
+@freeze_time("2026-11-09 12:00:00")
+def test_rest_screen_respects_the_timer_sound_setting(
+    client, user, active_plan, active_plan_day, active_plan_item
+):
+    user.settings.timer_sound = False
+    user.settings.save(update_fields=["timer_sound"])
+    session = _start(user, _scheduled(user, active_plan, active_plan_day))
+    session_exercise = session.session_exercises.get()
+    client.force_login(user)
+
+    response = client.post(
+        reverse("session_log_set", args=[session.pk]),
+        {"exercise": session_exercise.pk, "weight_lb": "225", "reps": "8"},
+        HTTP_HX_REQUEST="true",
+        HTTP_HX_TARGET="runner",
+    )
+
+    assert response.status_code == 200
+    assert b"runnerTimer(120, false)" in response.content
 
 
 @pytest.mark.django_db

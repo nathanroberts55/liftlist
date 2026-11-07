@@ -7,7 +7,7 @@ NAV_ITEMS = [
         "url_name": "today",
         "label": "Today",
         "icon": "calendar-check",
-        "active_url_names": {"today"},
+        "active_url_names": {"today", "session_new", "session_log"},
     },
     {
         "url_name": "plans",
@@ -36,7 +36,15 @@ NAV_ITEMS = [
         "url_name": "history",
         "label": "History",
         "icon": "history",
-        "active_url_names": {"history"},
+        "active_url_names": {
+            "history",
+            "session_detail",
+            "session_edit",
+            "session_delete",
+            "set_edit",
+            "set_delete",
+            "set_row",
+        },
     },
     {
         "url_name": "stats",

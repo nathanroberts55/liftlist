@@ -19,12 +19,13 @@
     return minutes + ":" + String(seconds).padStart(2, "0");
   }
 
-  window.runnerTimer = function runnerTimer(seconds) {
+  window.runnerTimer = function runnerTimer(seconds, soundEnabled) {
     var initial = Math.max(0, Math.round(Number(seconds) || 0));
     return {
       total: initial,
       remaining: initial,
       resting: initial > 0,
+      soundEnabled: soundEnabled !== false,
       endAt: 0,
       intervalId: null,
       announcement: "",
@@ -112,7 +113,7 @@
         if (this.$refs.setPanel) {
           this.$refs.setPanel.inert = false;
         }
-        if (typeof window.liftListBeep === "function") {
+        if (this.soundEnabled && typeof window.liftListBeep === "function") {
           window.liftListBeep();
         }
         var panel = this.$refs.setPanel;

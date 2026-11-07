@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}{% if tag %}Edit tag{% else %}New tag{% endif %} · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a href="{% url 'settings' %}" class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]">
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">Settings</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-md">
+    <h1 class="text-2xl font-bold">{% if tag %}Edit tag{% else %}New tag{% endif %}</h1>
+    <p class="mt-1 text-[14px] text-base-content/60">
+      Tags group workouts in History and can be pre-selected for unscheduled sessions.
+    </p>
+
+    <form method="post" action="{% if tag %}{% url 'tag_edit' tag.pk %}{% else %}{% url 'tag_new' %}{% endif %}" class="ll-card mt-4 space-y-5" hx-boost="false">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error items-start text-sm" role="alert">
+          <div class="space-y-1">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="{{ form.name.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.name.label }}</label>
+        {{ form.name }}
+        {% for error in form.name.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+
+      <fieldset>
+        <legend class="mb-1.5 block text-sm font-medium">Color</legend>
+        <div class="grid grid-cols-4 gap-2">
+          {% for radio in form.color %}
+            <label class="tag-color-option" for="{{ radio.id_for_label }}" style="--tag-color: {{ radio.data.value }}" title="{{ radio.choice_label }}">
+              {{ radio.tag }}
+              <span class="sr-only">{{ radio.choice_label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+        {% for error in form.color.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+      </fieldset>
+
+      <button type="submit" class="btn btn-primary h-14 min-h-14 w-full text-[17px] font-semibold">
+        {% if tag %}Save tag{% else %}Create tag{% endif %}
+      </button>
+      <a href="{% url 'settings' %}" class="btn btn-ghost h-12 min-h-12 w-full text-[15px] text-base-content/60">Cancel</a>
+    </form>
+
+    {% if tag %}
+      <div class="ll-card mt-6 flex items-center justify-between gap-4">
+        <div>
+          <p class="font-semibold">Delete tag</p>
+          <p class="mt-0.5 text-sm text-base-content/60">It is removed from every workout. The workouts stay.</p>
+        </div>
+        <a href="{% url 'tag_delete' tag.pk %}" class="btn btn-ghost h-12 min-h-12 gap-2 text-error">
+          {% icon "trash-2" css_class="size-5" %}
+          Delete
+        </a>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}

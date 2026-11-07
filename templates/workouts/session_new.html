@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}Unscheduled session · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a href="{% url 'today' %}" class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]">
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">Today</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-xl">
+    <h1 class="text-2xl font-bold">Unscheduled session</h1>
+    <p class="mt-1 text-[14px] text-base-content/60">
+      Plan the exercises now and run it set by set. It will not affect plan adherence.
+    </p>
+
+    <form method="post" action="{% url 'session_new' %}" class="mt-4 space-y-5" hx-boost="false">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error items-start text-sm" role="alert">
+          <div class="space-y-1">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="{{ form.title.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.title.label }}</label>
+        {{ form.title }}
+        {% for error in form.title.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+
+      {% include "workouts/_tags_field.html" with form=form available_tags=available_tags %}
+
+      <section aria-labelledby="session-exercises">
+        <h2 id="session-exercises" class="text-lg font-semibold">Exercises</h2>
+        <p class="mt-1 text-[13px] text-base-content/60">
+          Leave a row blank to skip it. Targets can be changed later in the plan.
+        </p>
+        <div class="mt-3">
+          {% include "workouts/_session_items.html" with formset=formset %}
+        </div>
+      </section>
+
+      <button type="submit" class="btn btn-primary h-14 min-h-14 w-full text-[17px] font-semibold">
+        Start workout
+      </button>
+      <a href="{% url 'today' %}" class="btn btn-ghost h-12 min-h-12 w-full text-[15px] text-base-content/60">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

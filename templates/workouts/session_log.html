@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}Log past workout · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a href="{% url 'today' %}" class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]">
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">Today</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-xl">
+    <h1 class="text-2xl font-bold">Log past workout</h1>
+    <p class="mt-1 text-[14px] text-base-content/60">
+      Record something that already happened. Add sets after saving, or edit the details at any time.
+    </p>
+
+    <form method="post" action="{% url 'session_log' %}" class="mt-4 space-y-5" hx-boost="false">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-error items-start text-sm" role="alert">
+          <div class="space-y-1">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div>
+        <label for="{{ form.title.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.title.label }}</label>
+        {{ form.title }}
+        {% for error in form.title.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label for="{{ form.performed_date.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.performed_date.label }}</label>
+          {{ form.performed_date }}
+          {% for error in form.performed_date.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+        <div>
+          <label for="{{ form.start_time.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+            {{ form.start_time.label }} <span class="font-normal text-base-content/50">(optional)</span>
+          </label>
+          {{ form.start_time }}
+          {% for error in form.start_time.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+        </div>
+      </div>
+
+      <div>
+        <label for="{{ form.duration_minutes.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+          {{ form.duration_minutes.label }} <span class="font-normal text-base-content/50">(optional)</span>
+        </label>
+        {{ form.duration_minutes }}
+        {% for error in form.duration_minutes.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+      </div>
+
+      {% include "workouts/_tags_field.html" with form=form available_tags=available_tags %}
+
+      <section aria-labelledby="session-exercises">
+        <h2 id="session-exercises" class="text-lg font-semibold">Exercises</h2>
+        <p class="mt-1 text-[13px] text-base-content/60">
+          Add the exercises you did. You will enter the actual sets on the next screen.
+        </p>
+        <div class="mt-3">
+          {% include "workouts/_session_items.html" with formset=formset %}
+        </div>
+      </section>
+
+      <button type="submit" class="btn btn-primary h-14 min-h-14 w-full text-[17px] font-semibold">
+        Save workout
+      </button>
+      <a href="{% url 'today' %}" class="btn btn-ghost h-12 min-h-12 w-full text-[15px] text-base-content/60">Cancel</a>
+    </form>
+  </div>
+{% endblock %}

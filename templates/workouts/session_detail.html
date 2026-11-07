@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load icons %}
+
+{% block title %}{{ session.title }} · Lift List{% endblock %}
+
+{% block topbar_left %}
+  <a href="{% url 'history' %}" class="btn btn-ghost h-11 min-h-11 -ml-2 min-w-0 gap-1 px-2 text-[15px]">
+    {% icon "arrow-left" css_class="size-5 shrink-0" %}
+    <span class="truncate">History</span>
+  </a>
+{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-[760px]">
+    <div class="flex items-start justify-between gap-3">
+      <div class="min-w-0">
+        <p class="text-[11px] font-semibold uppercase tracking-wider text-primary">
+          {{ session.performed_date|date:"D, M j, Y" }}
+          {% if session.scheduled_workout %}· {{ session.scheduled_workout.plan.name }}{% elif session.kind == "UNSCHEDULED" %}· Unscheduled{% endif %}
+        </p>
+        <h1 class="mt-0.5 truncate text-2xl font-bold">{{ session.title }}</h1>
+        <p class="mt-1 text-[13px] text-base-content/60">
+          {% if session.is_completed %}Completed{% else %}In progress{% endif %}
+          {% if session.elapsed_label %}· {{ session.elapsed_label }}{% endif %}
+        </p>
+      </div>
+      <span class="shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold {% if session.is_completed %}bg-success/15 text-success{% else %}bg-primary/10 text-primary{% endif %}">
+        {% if session.is_completed %}DONE{% else %}ACTIVE{% endif %}
+      </span>
+    </div>
+
+    {% if session.tags.all %}
+      <div class="mt-3 flex flex-wrap gap-1.5">
+        {% for tag in session.tags.all %}
+          {% include "components/tag_chip.html" with tag=tag %}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if session.is_in_progress %}
+      <div class="ll-card mt-4 border-primary/30 bg-primary/5">
+        <p class="text-[15px] text-base-content/70">
+          This workout is still in progress. Resume the runner to log sets; editing is available after you finish.
+        </p>
+        <a href="{% url 'session_run' session.pk %}" class="btn btn-primary mt-3 h-12 min-h-12 w-full text-[16px] font-semibold">Resume workout</a>
+      </div>
+    {% endif %}
+
+    <div class="mt-4 flex flex-wrap gap-2">
+      {% if session.is_completed %}
+        <a href="{% url 'session_edit' session.pk %}" class="btn btn-neutral h-11 min-h-11 gap-2 px-4 text-[15px] font-semibold">
+          {% icon "pencil" css_class="size-4" %}
+          Edit workout
+        </a>
+      {% endif %}
+      {% if session.scheduled_workout %}
+        <a href="{% url 'plan_detail' session.scheduled_workout.plan_id %}" class="btn btn-ghost h-11 min-h-11 gap-2 px-3 text-[15px] text-primary">
+          {% icon "clipboard-list" css_class="size-4" %}
+          View plan
+        </a>
+      {% endif %}
+      {% if session.is_completed %}
+        <a href="{% url 'session_delete' session.pk %}" class="btn btn-ghost h-11 min-h-11 gap-2 px-3 text-[15px] text-error">
+          {% icon "trash-2" css_class="size-4" %}
+          Delete workout
+        </a>
+      {% endif %}
+    </div>
+
+    {% if exercises %}
+      <div class="mt-6 space-y-4">
+        {% for exercise in exercises %}
+          <section class="ll-card" aria-labelledby="exercise-{{ exercise.pk }}">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                <h2 id="exercise-{{ exercise.pk }}" class="truncate text-lg font-semibold">{{ exercise.exercise.name }}</h2>
+                <p class="mt-0.5 text-[13px] text-base-content/60">
+                  {{ exercise.target_summary }}
+                  {% if exercise.rest_seconds %}· {{ exercise.rest_seconds }}s rest{% endif %}
+                </p>
+              </div>
+              <span class="shrink-0 rounded-full bg-base-300 px-2.5 py-1 text-[11px] font-medium text-base-content/60">
+                {{ exercise.status|title }}
+              </span>
+            </div>
+
+            <div class="mt-3 divide-y divide-base-300 border-t border-base-300">
+              {% for log in exercise.sets.all %}
+                {% include "workouts/_set_row.html" with set_log=log editable=is_editable %}
+              {% empty %}
+                <p class="py-3 text-[14px] text-base-content/50">No sets logged.</p>
+              {% endfor %}
+            </div>
+
+            {% if is_editable %}
+              <div class="mt-3 border-t border-base-300 pt-3">
+                <p class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Add a set</p>
+                <form method="post" action="{% url 'set_add' session.pk %}" class="mt-2 space-y-3" hx-boost="false">
+                  {% csrf_token %}
+                  <input type="hidden" name="exercise" value="{{ exercise.pk }}">
+                  {% include "workouts/_set_fields.html" with form=exercise.add_form tracking_type=exercise.exercise.tracking_type %}
+                  <button type="submit" class="btn btn-neutral h-12 min-h-12 w-full text-[15px] font-semibold">
+                    {% icon "plus" css_class="size-4" %}
+                    Add set
+                  </button>
+                </form>
+              </div>
+            {% endif %}
+          </section>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="mt-6">
+        {% include "components/empty_state.html" with icon="clipboard-list" title="No exercises" message="This workout has no exercises recorded." %}
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
