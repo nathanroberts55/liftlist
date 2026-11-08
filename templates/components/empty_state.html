@@ -1,17 +1,18 @@
 {% load icons %}
 {% comment %}
 Empty state component.
-Params: icon, title, message, action_label (optional), action_href (optional).
+Params: icon, title, message, action_label/href (optional), action_icon (default plus),
+compact (optional truthy: omit the outer card wrapper for nested contexts).
 {% endcomment %}
-<div class="ll-card flex flex-col items-center px-6 py-10 text-center">
-  <span class="flex size-14 items-center justify-center rounded-full bg-base-300 text-primary" aria-hidden="true">
+<div class="{% if not compact %}ll-card {% endif %}flex flex-col items-center {% if compact %}px-2 py-6{% else %}px-6 py-10{% endif %} text-center">
+  <span class="flex {% if compact %}size-12{% else %}size-14{% endif %} items-center justify-center rounded-full bg-base-300 text-primary" aria-hidden="true">
     {% icon icon css_class="size-7" %}
   </span>
-  <h2 class="mt-4 text-xl font-semibold">{{ title }}</h2>
+  <h2 class="mt-4 {% if compact %}text-lg{% else %}text-xl{% endif %} font-semibold">{{ title }}</h2>
   <p class="mt-2 max-w-sm text-[15px] text-base-content/60">{{ message }}</p>
   {% if action_label and action_href %}
-    <div class="mt-6 w-full max-w-xs">
-      {% include "components/button.html" with label=action_label href=action_href icon="plus" %}
+    <div class="mt-5 w-full max-w-xs">
+      {% include "components/button.html" with label=action_label href=action_href icon=action_icon|default:"plus" %}
     </div>
   {% endif %}
 </div>
