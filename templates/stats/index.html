@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% load static icons %}
+
+{% block title %}Stats · Lift List{% endblock %}
+
+{% block content %}
+  <div class="mx-auto w-full max-w-[900px]">
+    <div class="mt-2 flex items-center justify-between gap-3 md:mt-5">
+      <h1 class="text-2xl font-bold">Stats</h1>
+      <a href="{% url 'history' %}" class="btn btn-ghost h-11 min-h-11 gap-1 px-2 text-[15px] text-base-content/60">
+        History
+        {% icon "chevron-right" css_class="size-4" %}
+      </a>
+    </div>
+
+    <div class="mt-2 inline-flex w-full rounded-full border border-base-300 bg-base-200 p-1 md:mt-3" role="group" aria-label="Stats tabs">
+      <a
+        href="?tab=progress"
+        class="btn h-11 min-h-11 flex-1 rounded-full px-2 text-[13px] font-semibold {% if tab == 'progress' %}bg-base-100 text-base-content shadow-sm{% else %}btn-ghost text-base-content/60{% endif %}"
+        {% if tab == 'progress' %}aria-current="page"{% endif %}
+      >Progress</a>
+      <a
+        href="?tab=prs"
+        class="btn h-11 min-h-11 flex-1 rounded-full px-2 text-[13px] font-semibold {% if tab == 'prs' %}bg-base-100 text-base-content shadow-sm{% else %}btn-ghost text-base-content/60{% endif %}"
+        {% if tab == 'prs' %}aria-current="page"{% endif %}
+      >PRs</a>
+      <a
+        href="?tab=volume"
+        class="btn h-11 min-h-11 flex-1 rounded-full px-2 text-[13px] font-semibold {% if tab == 'volume' %}bg-base-100 text-base-content shadow-sm{% else %}btn-ghost text-base-content/60{% endif %}"
+        {% if tab == 'volume' %}aria-current="page"{% endif %}
+      >Volume</a>
+    </div>
+
+    {% if tab == 'progress' %}
+      <section class="mt-5" aria-labelledby="progress-heading">
+        <div class="flex items-center justify-between gap-3">
+          <h2 id="progress-heading" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Weight over time</h2>
+          <a href="{% url 'stats' %}?tab=prs" class="text-[13px] font-semibold text-primary">View PRs</a>
+        </div>
+
+        {% if exercise_options %}
+          <form method="get" action="{% url 'stats' %}" class="mt-2 space-y-2" hx-boost="false">
+            <input type="hidden" name="tab" value="progress">
+            <input type="hidden" name="range" value="{{ range_key }}">
+            <label for="progress-exercise" class="block text-[13px] font-medium text-base-content/60">Exercise</label>
+            <div class="flex gap-2">
+              <select id="progress-exercise" name="exercise" class="ll-input min-w-0 flex-1">
+                {% for option in exercise_options %}
+                  <option value="{{ option.pk }}" {% if exercise and option.pk == exercise.pk %}selected{% endif %}>{{ option.name }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-neutral h-12 min-h-12 px-4 text-[15px] font-semibold">Show</button>
+            </div>
+          </form>
+
+          <div class="mt-2 flex gap-1.5 overflow-x-auto pb-0.5" role="group" aria-label="Time range">
+            {% for key, label in range_labels %}
+              <a
+                href="?tab=progress&amp;exercise={{ exercise.pk }}&amp;range={{ key }}"
+                class="ll-filter-chip"
+                {% if key == range_key %}aria-pressed="true"{% else %}aria-pressed="false"{% endif %}
+              >{{ label }}</a>
+            {% endfor %}
+          </div>
+
+          <div class="ll-card mt-3">
+            {% if has_chart %}
+              <div class="relative h-64 md:h-80">
+                <canvas id="progress-chart" data-chart="line" data-chart-source="progress-chart-data" role="img" aria-label="Top-set weight over time for {{ exercise.name }}"></canvas>
+              </div>
+              <p class="mt-2 text-[12px] text-base-content/50">
+                Top set per session. Tap or hover a point for every set that day.
+              </p>
+              {{ chart|json_script:"progress-chart-data" }}
+            {% else %}
+              {% include "components/empty_state.html" with icon="chart-line" title="No weight history yet" message="Log weighted sets for this exercise to start the chart." %}
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="ll-card mt-3">
+            {% include "components/empty_state.html" with icon="chart-line" title="No weight history yet" message="Finish a workout with a weighted exercise to start tracking progress." %}
+          </div>
+        {% endif %}
+      </section>
+
+    {% elif tab == 'prs' %}
+      <section class="mt-5" aria-labelledby="prs-heading">
+        <h2 id="prs-heading" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Personal records</h2>
+
+        <form method="get" action="{% url 'stats' %}" class="mt-2 space-y-2" hx-boost="false">
+          <input type="hidden" name="tab" value="prs">
+          <div class="flex gap-2">
+            <label for="pr-search" class="sr-only">Search exercises</label>
+            <input id="pr-search" type="search" name="q" value="{{ query }}" placeholder="Search exercises" class="ll-input min-w-0 flex-1">
+            <button type="submit" class="btn btn-neutral h-12 min-h-12 px-4 text-[15px] font-semibold">Search</button>
+          </div>
+          <div class="flex gap-2">
+            <label for="pr-muscle" class="sr-only">Muscle group</label>
+            <select id="pr-muscle" name="muscle" class="ll-input min-w-0 flex-1">
+              <option value="">All muscle groups</option>
+              {% for muscle in muscles %}
+                <option value="{{ muscle.slug }}" {% if muscle.slug == muscle_slug %}selected{% endif %}>{{ muscle.name }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-ghost h-12 min-h-12 px-4 text-[15px] font-semibold">Filter</button>
+          </div>
+        </form>
+
+        <div class="mt-3 space-y-2">
+          {% for entry in table %}
+            <div class="ll-card">
+              <details class="group">
+                <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2">
+                  <span class="min-w-0 flex-1">
+                    <span class="block truncate text-[15px] font-semibold">{{ entry.exercise.name }}</span>
+                    <span class="block text-[12px] text-base-content/50">{{ entry.exercise.primary_muscle.name }}</span>
+                  </span>
+                  <span class="shrink-0 text-right">
+                    <span class="block text-[15px] font-bold tabular-nums">{{ entry.records.heaviest.weight_lb|floatformat:"-2" }} lb</span>
+                    <span class="block text-[11px] text-base-content/50">{{ entry.records.heaviest.reps|default:"—" }} reps · {{ entry.records.heaviest.performed_date|date:"M j" }}</span>
+                  </span>
+                  {% icon "chevron-down" css_class="size-4 shrink-0 text-base-content/40 transition group-open:rotate-180" %}
+                </summary>
+                <div class="mt-3 border-t border-base-300 pt-3">
+                  <p class="text-[13px] text-base-content/60">
+                    Heaviest set: <span class="font-semibold text-base-content">{{ entry.records.heaviest.weight_lb|floatformat:"-2" }} lb × {{ entry.records.heaviest.reps|default:"—" }}</span>
+                    on {{ entry.records.heaviest.performed_date|date:"M j, Y" }}
+                  </p>
+                  <h3 class="mt-3 text-[11px] font-semibold uppercase tracking-wider text-base-content/50">Most reps at each weight</h3>
+                  <ul class="mt-1 divide-y divide-base-300">
+                    {% for record in entry.records.reps_by_weight %}
+                      <li class="flex items-center justify-between gap-3 py-2 text-[14px]">
+                        <span class="tabular-nums">{{ record.weight_lb|floatformat:"-2" }} lb</span>
+                        <span class="tabular-nums">{{ record.reps|default:"—" }} reps</span>
+                        <span class="text-[12px] text-base-content/50">{{ record.performed_date|date:"M j" }}</span>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </details>
+            </div>
+          {% empty %}
+            <div class="ll-card">
+              {% include "components/empty_state.html" with icon="trophy" title="No records yet" message="Finish a workout with a weighted exercise to set your first PR." %}
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+
+    {% else %}
+      <section class="mt-5" aria-labelledby="volume-heading">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="volume-heading" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Weekly volume</h2>
+          <div class="inline-flex rounded-full border border-base-300 bg-base-200 p-1" role="group" aria-label="Volume metric">
+            <a
+              href="?tab=volume&amp;metric=sets{% if exclude_tag %}&amp;exclude_tag={{ exclude_tag.pk }}{% endif %}"
+              class="btn h-9 min-h-9 rounded-full px-3 text-[12px] font-semibold {% if metric == 'sets' %}bg-base-100 text-base-content shadow-sm{% else %}btn-ghost text-base-content/60{% endif %}"
+              {% if metric == 'sets' %}aria-current="page"{% endif %}
+            >Sets</a>
+            <a
+              href="?tab=volume&amp;metric=tonnage{% if exclude_tag %}&amp;exclude_tag={{ exclude_tag.pk }}{% endif %}"
+              class="btn h-9 min-h-9 rounded-full px-3 text-[12px] font-semibold {% if metric == 'tonnage' %}bg-base-100 text-base-content shadow-sm{% else %}btn-ghost text-base-content/60{% endif %}"
+              {% if metric == 'tonnage' %}aria-current="page"{% endif %}
+            >Tonnage</a>
+          </div>
+        </div>
+
+        <form method="get" action="{% url 'stats' %}" class="mt-2 flex gap-2" hx-boost="false">
+          <input type="hidden" name="tab" value="volume">
+          <input type="hidden" name="metric" value="{{ metric }}">
+          <label for="volume-tag" class="sr-only">Exclude tag</label>
+          <select id="volume-tag" name="exclude_tag" class="ll-input min-w-0 flex-1">
+            <option value="">No tag excluded</option>
+            {% for tag in tags %}
+              <option value="{{ tag.pk }}" {% if exclude_tag and tag.pk == exclude_tag.pk %}selected{% endif %}>Exclude {{ tag.name }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-neutral h-12 min-h-12 px-4 text-[15px] font-semibold">Apply</button>
+        </form>
+
+        <div class="ll-card mt-3">
+          {% if has_chart %}
+            <div class="relative h-72 md:h-96">
+              <canvas id="volume-chart" data-chart="bar" data-chart-source="volume-chart-data" role="img" aria-label="Weekly {{ metric }} by primary muscle group"></canvas>
+            </div>
+            <p class="mt-2 text-[12px] text-base-content/50">
+              Last 8 ISO weeks (Mon–Sun) · primary muscle group only{% if exclude_tag %} · excluding {{ exclude_tag.name }}{% endif %}
+            </p>
+            <ul class="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-base-300 pt-3 text-[12px] text-base-content/60">
+              {% for series in chart.series %}
+                <li><span class="font-semibold text-base-content">{{ series.name }}</span> {{ series.total_label }}</li>
+              {% endfor %}
+            </ul>
+            {{ chart|json_script:"volume-chart-data" }}
+          {% else %}
+            {% include "components/empty_state.html" with icon="chart-line" title="No volume yet" message="Finish a workout to see weekly sets and tonnage by muscle group." %}
+          {% endif %}
+        </div>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {% if has_chart %}
+    <script src="{% static 'vendor/chart.umd.min.js' %}" defer></script>
+    <script src="{% static 'js/charts.js' %}" defer></script>
+  {% endif %}
+{% endblock %}

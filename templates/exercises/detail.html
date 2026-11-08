@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load icons %}
+{% load static icons %}
 
 {% block title %}{{ exercise.name }} · Lift List{% endblock %}
 
@@ -57,28 +57,106 @@
     </div>
 
     <section class="mt-6" aria-labelledby="records-heading">
-      <h2 id="records-heading" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">
-        Personal records
-      </h2>
+      <div class="flex items-center justify-between gap-2 px-1">
+        <h2 id="records-heading" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">
+          Personal records
+        </h2>
+        <a href="{% url 'stats' %}?tab=prs&amp;q={{ exercise.name|urlencode }}" class="text-[13px] font-semibold text-primary">
+          All PRs
+        </a>
+      </div>
       <div class="ll-card mt-2">
-        <p class="text-[15px] text-base-content/60">
-          Heaviest weight and rep PRs appear here after your first workout.
-        </p>
+        {% if records.heaviest %}
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="text-[11px] font-semibold uppercase tracking-wider text-accent">Heaviest set</p>
+              <p class="mt-1 text-2xl font-bold tabular-nums">
+                {{ records.heaviest.weight_lb|floatformat:"-2" }} lb
+              </p>
+              <p class="mt-0.5 text-[13px] text-base-content/60">
+                {{ records.heaviest.reps|default:"—" }} reps · {{ records.heaviest.performed_date|date:"M j, Y" }}
+              </p>
+            </div>
+            <span class="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent" aria-hidden="true">
+              {% icon "trophy" css_class="size-5" %}
+            </span>
+          </div>
+
+          <h3 class="mt-4 border-t border-base-300 pt-3 text-[11px] font-semibold uppercase tracking-wider text-base-content/50">
+            Most reps at each weight
+          </h3>
+          <ul class="mt-1 divide-y divide-base-300">
+            {% for record in records.reps_by_weight %}
+              <li class="flex items-center justify-between gap-3 py-2 text-[14px]">
+                <span class="tabular-nums">{{ record.weight_lb|floatformat:"-2" }} lb</span>
+                <span class="tabular-nums">{{ record.reps|default:"—" }} reps</span>
+                <span class="text-[12px] text-base-content/50">{{ record.performed_date|date:"M j" }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="text-[15px] text-base-content/60">
+            {% if exercise.tracking_type == "WEIGHT_REPS" or exercise.tracking_type == "WEIGHT_DISTANCE" %}
+              Heaviest weight and rep PRs appear here after your first completed workout.
+            {% else %}
+              Personal records are tracked for weight-based exercises.
+            {% endif %}
+          </p>
+        {% endif %}
       </div>
     </section>
+
+    {% if has_chart %}
+      <section class="mt-6" aria-labelledby="trend-heading">
+        <h2 id="trend-heading" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">
+          Weight over time
+        </h2>
+        <div class="ll-card mt-2">
+          <div class="relative h-64 md:h-80">
+            <canvas
+              id="exercise-chart"
+              data-chart="line"
+              data-chart-source="exercise-chart-data"
+              role="img"
+              aria-label="Top-set weight over time for {{ exercise.name }}"
+            ></canvas>
+          </div>
+          <p class="mt-2 text-[12px] text-base-content/50">
+            Top set per session. Tap or hover a point for every set that day.
+          </p>
+          {{ chart|json_script:"exercise-chart-data" }}
+        </div>
+      </section>
+    {% endif %}
 
     <section class="mt-6" aria-labelledby="recent-heading">
       <h2 id="recent-heading" class="px-1 text-[13px] font-semibold uppercase tracking-wider text-base-content/50">
         Recent sessions
       </h2>
-      <div class="ll-card mt-2 flex flex-col items-center px-6 py-8 text-center">
-        <span class="flex size-12 items-center justify-center rounded-full bg-base-300 text-primary" aria-hidden="true">
-          {% icon "history" css_class="size-6" %}
-        </span>
-        <p class="mt-3 max-w-sm text-[15px] text-base-content/60">
-          No sessions yet. Workout history arrives in a later milestone.
-        </p>
-      </div>
+      {% if recent_sessions %}
+        <div class="mt-2 space-y-2">
+          {% for item in recent_sessions %}
+            <a
+              href="{% url 'session_detail' item.session.pk %}"
+              class="ll-card flex min-h-11 items-center gap-3 py-3 transition hover:bg-base-300/40"
+            >
+              <div class="min-w-0 flex-1">
+                <p class="truncate text-[15px] font-semibold">{{ item.session.title }}</p>
+                <p class="text-[12px] text-base-content/50">{{ item.session.performed_date|date:"D, M j, Y" }}</p>
+              </div>
+              <div class="shrink-0 text-right">
+                <p class="text-[14px] font-semibold tabular-nums">{{ item.done_count }}/{{ item.target_sets }} sets</p>
+                <p class="text-[11px] text-base-content/50">{{ item.target_summary }}</p>
+              </div>
+              {% icon "chevron-right" css_class="size-4 shrink-0 text-base-content/40" %}
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="mt-2">
+          {% include "components/empty_state.html" with icon="history" title="No sessions yet" message="This exercise will appear here after your first completed workout." %}
+        </div>
+      {% endif %}
     </section>
 
     <div class="mt-8 space-y-3 pb-4">
@@ -144,4 +222,11 @@
       {% endif %}
     </div>
   </div>
+{% endblock %}
+
+{% block scripts %}
+  {% if has_chart %}
+    <script src="{% static 'vendor/chart.umd.min.js' %}" defer></script>
+    <script src="{% static 'js/charts.js' %}" defer></script>
+  {% endif %}
 {% endblock %}

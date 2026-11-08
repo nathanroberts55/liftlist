@@ -26,6 +26,7 @@ from .forms import (
 from .models import Session, SessionExercise, SetLog, Tag
 from .services import history, progression, runner
 from .services import sessions as session_services
+from .services import summary as summary_services
 from .services import tags as tag_services
 
 
@@ -211,6 +212,7 @@ def _runner_context(
         context["increase_exercises"] = [
             exercise for exercise in exercises if progression.increase_flag(exercise)
         ]
+    context["summary"] = summary_services.build_summary(session) if session.is_completed else None
     return context
 
 
@@ -583,6 +585,7 @@ def session_detail(request, pk):
             "session": session,
             "exercises": exercises,
             "is_editable": session.is_completed,
+            "summary": (summary_services.build_summary(session) if session.is_completed else None),
         },
     )
 

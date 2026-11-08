@@ -4,6 +4,9 @@ from django.contrib import messages
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
+from apps.stats.services import aggregations as stats_aggregations
+from apps.workouts.services import records as record_services
+
 from .forms import ExerciseForm
 from .models import Exercise, MuscleGroup
 from .services.library import (
@@ -52,8 +55,10 @@ def library(request):
 
 
 def detail(request, pk):
-    """Exercise detail. Records and charts arrive with later milestones."""
+    """Exercise detail with records, recent sessions, and a weight chart."""
     exercise = get_exercise(request.user, pk)
+    exercise_records = record_services.prs_for_exercise(request.user, exercise)
+    chart = stats_aggregations.top_set_chart(request.user, exercise, "all")
     return render(
         request,
         "exercises/detail.html",
@@ -62,6 +67,10 @@ def detail(request, pk):
             "exercise": exercise,
             "is_archived": is_archived_for(request.user, exercise),
             "secondary_names": [muscle.name for muscle in exercise.secondary_muscles.all()],
+            "records": exercise_records,
+            "recent_sessions": stats_aggregations.recent_sessions(request.user, exercise),
+            "chart": chart,
+            "has_chart": bool(chart["labels"]),
         },
     )
 

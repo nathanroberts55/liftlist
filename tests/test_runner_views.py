@@ -475,6 +475,9 @@ def test_finish_shows_the_completion_card(
 
     page = client.get(response.url)
     assert b"Workout complete" in page.content
+    assert b"Total volume" in page.content
+    assert b"Muscles worked" in page.content
+    assert b"Plan adherence" in page.content
     assert b"Done" in page.content
 
 

@@ -6,6 +6,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 ## [Unreleased]
 
 ### Added
+- Workout summary (F-08): the post-finish card and History session detail now show duration, completed vs planned sets (with extra/skipped counts), tonnage with a comparison against the previous completed session of the same Plan Day or title, PRs, “Ready to increase” exercises, sets per primary muscle group, average difficulty, and active-plan adherence with the current streak. The summary is derived on demand, so editing a past session updates it immediately.
+- Stats (F-10): `/stats/` with Progress, PRs, and Volume tabs. Progress plots the top set per session date for an exercise across 3M/6M/1Y/All with full-set tooltips; PRs lists the heaviest set and expandable “most reps at each weight” records with search and muscle filters; Volume stacks weekly sets or tonnage by primary muscle group across the last 8 ISO weeks with a tag exclusion filter.
+- Stats JSON endpoints (`/stats/api/top-set/`, `/stats/api/volume/`) for Chart.js, login required and scoped to the visible exercises and sessions of the logged-in user.
+- Personal-record engine (`workouts/services/records.py`) shared by the summary, exercise detail, and stats PR table, implementing the PRD F-10 heaviest-weight and most-reps-at-weight rules.
+- Exercise detail now shows the last five sessions, current PRs, and an all-time top-set chart, and links to the filtered PR table.
+- Chart.js 4.4.7 vendored in `static/vendor/` (no runtime CDN), `static/js/charts.js` reading theme colors from CSS variables, and chart palette tokens for both themes.
+- Record, summary, stats aggregation, stats view, auth, and user-isolation tests.
 - Unscheduled sessions (F-06): `/sessions/new/` plans and starts a workout with a title, tags, and type-aware exercise targets. “Add another exercise” re-renders the bound form without JavaScript, and **Start workout** creates an in-progress unscheduled session in the runner. Today gains an “On your own” section with plan-and-start and retro-log entry points; plan-and-start is hidden while another workout is in progress.
 - Retroactive logging (F-06): `/sessions/log/` records a completed past workout with title, date, optional start time and duration, tags, and exercises. Future dates are rejected; the detail page then accepts sets.
 - Tags (F-06): user-scoped tag CRUD on Settings using the DESIGN chart palette, duplicate-name protection ignoring case, per-tag workout counts, default tags pre-selected on new sessions, and tag chips/status-dot components with theme-driven colors.
@@ -42,6 +49,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Library services (`apps/exercises/services/library.py`) for listing, grouping, name validation, and create/update/archive/restore, with unit tests; model, form, view, user-isolation, and seed-command tests.
 
 ### Changed
+- TECH_SPEC §4.7–4.9 and §5 now describe the records engine, summary dataclass, stats aggregations, chart endpoints, and the rule that Stats links to the History calendar instead of duplicating it.
+- The Stats tab is a real destination instead of a placeholder, and the exercise detail page reuses the stats services for its records and chart.
 - Deployment: added `k8s/ingress.yaml` (Traefik host rule, no TLS block because Cloudflare terminates TLS), made both probes send `Host: liftlist.naterobertstech.com` so Django's `ALLOWED_HOSTS` accepts the kubelet request, switched the single replica to `strategy: Recreate` to avoid concurrent migrations, and documented the gitignored `k8s/secrets.yaml` workflow alongside the committed `k8s/secret.example.yaml`.
 - ADR 0006 records the M4 split: tag CRUD, history filters, session creation, and destructive confirmations use full-page POST/redirect flows, while only set editing adds an HTMX row swap. Fragment branches are gated on `HX-Target` so boosted navigation always receives a full page.
 - TECH_SPEC §4.2–4.9, §5, and §6 now describe the unscheduled/retro/history/tag services, the new routes, the full-page flows, the `HX-Target` rule, and the timer-sound preference.
@@ -61,4 +70,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Library navigation via the app shell no longer replaces the whole page with the exercise list fragment. The boosted page request now renders the full Library page with the top bar, bottom tab bar, and sidebar; the HTMX list fragment is returned only when the search form targets `#library-list`.
 
 ### Notes
-- M0–M4 cover the scaffold, the exercise library, plan building and scheduling, the workout runner with progression, unscheduled and retroactive sessions, tags, Settings additions, and history with editing. Summary, PRs, and stats arrive in later milestones.
+- M0–M5 cover the scaffold, the exercise library, plan building and scheduling, the workout runner with progression, unscheduled and retroactive sessions, tags, Settings additions, history with editing, the workout summary, and stats. Polish (empty states, iPad layouts, accessibility) is M6.

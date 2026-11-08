@@ -4,7 +4,7 @@ Self-hosted, mobile-first web app for planning workout splits, running workouts 
 
 Built with Django 5.2, server-rendered templates, HTMX, Alpine.js, Tailwind CSS v4 (standalone CLI), and DaisyUI 5. No Node toolchain is required.
 
-**Status:** M4 history, tags, and editing — authentication, theme, installable PWA, `/healthz/`, the app shell, a seeded exercise library, the plan builder with scheduling and the Today screen, the workout runner, unscheduled and retroactive sessions, tags, Settings additions, and a calendar/list history with session and set editing. Summary, PRs, and stats arrive in later milestones (see `docs/PRD.md` §12).
+**Status:** M5 summary and stats — authentication, theme, installable PWA, `/healthz/`, the app shell, a seeded exercise library, the plan builder with scheduling and the Today screen, the workout runner, unscheduled and retroactive sessions, tags, Settings additions, a calendar/list history with session and set editing, the full workout summary, and Progress/PRs/Volume stats. M6 polish remains (see `docs/PRD.md` §12).
 
 ## Local development (SQLite)
 
@@ -86,10 +86,11 @@ apps/core/         Today, health check, PWA manifest, nav
 apps/accounts/     UserSettings, login/settings routes, ensure_superuser
 apps/exercises/    MuscleGroup, Exercise, ExerciseArchive, library services/views
 apps/plans/        Plan, PlanDay, PlanItem, ScheduledWorkout, builder/scheduling/Today services
-apps/workouts/     Tag, Session, SessionExercise, SetLog, unscheduled/history/tag services, runner and history views
+apps/stats/        Stats tabs, Chart.js JSON endpoints, and progress/volume aggregations
+apps/workouts/     Tag, Session, SessionExercise, SetLog, runner/history/tag/summary/record services
 templates/         base.html, components, page templates
 static/src/        Tailwind entry (input.css)
-static/vendor/     HTMX, Alpine, DaisyUI (pinned, vendored)
+static/vendor/     HTMX, Alpine, SortableJS, Chart.js, DaisyUI (pinned, vendored)
 static/img/icons/  PWA icons
 tests/             pytest suite
 k8s/               Deployment, Service, ConfigMap, Ingress, Secret example (real secrets.yaml is gitignored)

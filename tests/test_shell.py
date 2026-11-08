@@ -16,13 +16,15 @@ def test_authenticated_user_sees_the_app_shell(client, user):
 
 
 @pytest.mark.django_db
-def test_stats_is_still_a_placeholder(client, user):
+def test_stats_is_no_longer_a_placeholder(client, user):
     client.force_login(user)
 
     response = client.get(reverse("stats"))
 
     assert response.status_code == 200
-    assert b"Progress charts are coming" in response.content
+    assert b"Progress charts are coming" not in response.content
+    assert b"Weight over time" in response.content
+    assert b"No weight history yet" in response.content
 
 
 @pytest.mark.django_db

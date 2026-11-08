@@ -1,0 +1,126 @@
+{% load icons %}
+{% comment %}
+PRD F-08 summary, shared by the post-finish card and the History detail page.
+Expects ``summary`` from ``workouts.services.summary.build_summary``.
+{% endcomment %}
+<div class="space-y-4">
+  <div class="grid {% if summary.avg_difficulty %}grid-cols-3{% else %}grid-cols-2{% endif %} gap-2 text-center">
+    <div class="rounded-xl bg-base-300/60 px-2 py-3">
+      <p class="text-xl font-bold tabular-nums">{{ summary.duration_label|default:"—" }}</p>
+      <p class="mt-0.5 text-[11px] uppercase tracking-wider text-base-content/50">Time</p>
+    </div>
+    <div class="rounded-xl bg-base-300/60 px-2 py-3">
+      <p class="text-xl font-bold tabular-nums">{{ summary.done_sets }}/{{ summary.planned_sets }}</p>
+      <p class="mt-0.5 text-[11px] uppercase tracking-wider text-base-content/50">Sets</p>
+    </div>
+    {% if summary.avg_difficulty %}
+      <div class="rounded-xl bg-base-300/60 px-2 py-3">
+        <p class="text-xl font-bold tabular-nums">{{ summary.avg_difficulty|floatformat:1 }}</p>
+        <p class="mt-0.5 text-[11px] uppercase tracking-wider text-base-content/50">Avg</p>
+      </div>
+    {% endif %}
+  </div>
+  <p class="text-center text-[12px] text-base-content/50">{{ summary.sets_label }}</p>
+
+  <section class="ll-card" aria-labelledby="summary-volume">
+    <div class="flex items-start justify-between gap-3">
+      <div>
+        <h2 id="summary-volume" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Total volume</h2>
+        <p class="mt-1 text-2xl font-bold tabular-nums">{{ summary.volume_label }} lb</p>
+      </div>
+      {% if summary.comparison and summary.comparison.delta_percent is not None %}
+        <span class="shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold
+          {% if summary.comparison.direction == 'up' %}bg-success/15 text-success{% elif summary.comparison.direction == 'down' %}bg-error/15 text-error{% else %}bg-base-300 text-base-content/60{% endif %}">
+          {% if summary.comparison.direction == 'up' %}▲{% elif summary.comparison.direction == 'down' %}▼{% else %}—{% endif %}
+          {{ summary.comparison.delta_label }}
+        </span>
+      {% endif %}
+    </div>
+    {% if summary.comparison %}
+      <p class="mt-2 text-[13px] text-base-content/60">
+        vs {{ summary.comparison.prior_volume_label }} lb on {{ summary.comparison.prior_date|date:"M j" }}
+      </p>
+    {% else %}
+      <p class="mt-2 text-[13px] text-base-content/60">First comparable workout — a baseline for next time.</p>
+    {% endif %}
+  </section>
+
+  <section class="ll-card" aria-labelledby="summary-prs">
+    <h2 id="summary-prs" class="flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-wider text-accent">
+      {% icon "trophy" css_class="size-4" %}
+      PRs
+    </h2>
+    {% if summary.prs %}
+      <ul class="mt-2 space-y-1.5">
+        {% for pr in summary.prs %}
+          <li class="text-[15px]">
+            <span class="font-semibold">{{ pr.exercise.name }}</span>
+            <span class="text-base-content/60">— {{ pr.label }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="mt-2 text-[14px] text-base-content/50">No new records this session.</p>
+    {% endif %}
+  </section>
+
+  {% if summary.increase_exercises %}
+    <section class="ll-card bg-success/10" aria-labelledby="summary-increase">
+      <h2 id="summary-increase" class="flex items-center gap-1.5 text-[13px] font-semibold uppercase tracking-wider text-success">
+        {% icon "trending-up" css_class="size-4" %}
+        Ready to increase next time
+      </h2>
+      <p class="mt-2 text-[15px]">
+        {% for exercise in summary.increase_exercises %}{{ exercise.exercise.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+      </p>
+    </section>
+  {% endif %}
+
+  <section class="ll-card" aria-labelledby="summary-muscles">
+    <h2 id="summary-muscles" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Muscles worked</h2>
+    {% if summary.muscles %}
+      <div class="mt-3 space-y-2.5">
+        {% for row in summary.muscles %}
+          <div class="flex items-center gap-2">
+            <span class="w-24 shrink-0 truncate text-[13px] font-medium">{{ row.name }}</span>
+            <div class="h-2.5 min-w-0 flex-1 overflow-hidden rounded-full bg-base-300">
+              <div class="h-full rounded-full" style="width: {{ row.bar_percent }}%; background-color: var(--ll-chart-{{ row.color_index }});"></div>
+            </div>
+            <span class="w-7 shrink-0 text-right text-[12px] font-semibold tabular-nums text-base-content/70">{{ row.sets }}</span>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="mt-2 text-[14px] text-base-content/50">No completed sets to group by muscle.</p>
+    {% endif %}
+  </section>
+
+  {% if summary.adherence %}
+    <section class="ll-card" aria-labelledby="summary-adherence">
+      <h2 id="summary-adherence" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Plan adherence</h2>
+      <p class="mt-1 text-[13px] text-base-content/60">{{ summary.adherence.plan_name }}</p>
+      {% if summary.adherence.has_history %}
+        <div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[14px]">
+          <span class="inline-flex items-center gap-1.5">
+            <span class="ll-status-dot" data-status="COMPLETED"></span>
+            {{ summary.adherence.completed }} on time
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <span class="ll-status-dot" data-status="MADE_UP"></span>
+            {{ summary.adherence.made_up }} made up
+          </span>
+          <span class="inline-flex items-center gap-1.5">
+            <span class="ll-status-dot" data-status="MISSED"></span>
+            {{ summary.adherence.missed }} missed
+          </span>
+        </div>
+        <p class="mt-3 text-[15px] font-semibold">
+          {% icon "trending-up" css_class="mr-1 inline size-4 text-success" %}
+          Streak: {{ summary.adherence.streak }} workout{{ summary.adherence.streak|pluralize }}
+        </p>
+      {% else %}
+        <p class="mt-2 text-[14px] text-base-content/50">No scheduled workouts have been resolved yet.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+</div>

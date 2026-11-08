@@ -353,10 +353,12 @@ Business logic lives in `apps/<app>/services/*.py` as plain functions. Views sta
 
 ### 4.9 `stats/services/aggregations.py`
 
-- `top_set_series(user, exercise, since)`: per session date, the max weight (with its reps).
-- `weekly_volume(user, weeks=8, metric="sets"|"tonnage", tag_include=None, tag_exclude=None)`: grouped by ISO week (Monday start) × primary muscle group. Use `TruncWeek` on `performed_date`.
-- `adherence(plan)`: counts by status (excluding PENDING) plus the streak (PRD F-08).
-- `calendar_month(user, year, month, tags=None)`: per-day status dots.
+- `top_set_series(user, exercise, since=None)`: per session date, the max weight across every session that day, with its reps/distance and every set for the tooltip.
+- `top_set_chart(user, exercise, range_key="3m", today=None)`: Chart.js-ready labels/values/tooltips for the Progress tab and exercise detail.
+- `weekly_volume(user, weeks=8, metric="sets"|"tonnage", *, tag_include=None, tag_exclude=None, today=None)`: grouped by ISO week (Monday start) × primary muscle group, using the primary muscle only. Tonnage counts DONE `WEIGHT_REPS` sets.
+- `record_table(user, *, query="", muscle_slug="")`: visible weighted exercises with at least one record, plus `recent_sessions` and `weighted_exercises`.
+- `adherence(plan)`: re-exported from `workouts/services/summary.py`; counts by status (excluding PENDING) plus the streak (PRD F-08).
+- The History calendar (`calendar_month`) stays in `workouts/services/history.py`; Stats links to it instead of duplicating it.
 
 ## 5. URLs and views
 
@@ -401,8 +403,9 @@ All views use `LoginRequiredMixin` / `@login_required` except login and healthz.
 | GET | `/sets/<id>/row/` | set row partial | Cancels an inline edit by restoring the read-only row. |
 | GET/POST | `/sets/<id>/delete/` | delete a set | Confirmation page; renumbers the remaining sets. |
 | GET | `/history/` | calendar/list | `?view=calendar|list&month=YYYY-MM&day=YYYY-MM-DD&tag=&exclude_tag=&plan=`. Tag filters apply to sessions; a tag filter limits scheduled workouts to those with a matching session. |
-| GET | `/stats/` | stats tabs | `?tab=progress|prs|volume` |
-| GET | `/stats/api/…` | JSON for Chart.js | Small JSON views, login required. |
+| GET | `/stats/` | stats tabs | `?tab=progress|prs|volume`; Progress adds `exercise` and `range=3m|6m|1y|all`, PRs adds `q` and `muscle`, Volume adds `metric=sets|tonnage` and `exclude_tag`. Calls `sync_statuses` before aggregating. |
+| GET | `/stats/api/top-set/` | top-set JSON | `exercise`, optional `range`; login required and scoped to visible exercises. |
+| GET | `/stats/api/volume/` | weekly-volume JSON | `metric=sets|tonnage`, optional `exclude_tag`; login required. |
 | GET | `/manifest.webmanifest` | manifest | |
 | — | `/admin/` | Django admin | Register all models. |
 

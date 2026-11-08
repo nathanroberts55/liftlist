@@ -104,6 +104,14 @@
   --ll-success: #30d158;
   --ll-danger: #ff453a;
   --ll-info: #64d2ff;
+  --ll-chart-1: #2b7fff;
+  --ll-chart-2: #64d2ff;
+  --ll-chart-3: #ff9f0a;
+  --ll-chart-4: #30d158;
+  --ll-chart-5: #bf5af2;
+  --ll-chart-6: #ff375f;
+  --ll-chart-7: #ac8e68;
+  --ll-chart-8: #8e8e93;
 }
 
 [data-theme="liftlist-light"] {
@@ -120,6 +128,14 @@
   --ll-success: #1fa34a;
   --ll-danger: #e5383b;
   --ll-info: #0091c2;
+  --ll-chart-1: #0a6cff;
+  --ll-chart-2: #0091c2;
+  --ll-chart-3: #d97a00;
+  --ll-chart-4: #1fa34a;
+  --ll-chart-5: #bf5af2;
+  --ll-chart-6: #ff375f;
+  --ll-chart-7: #ac8e68;
+  --ll-chart-8: #8e8e93;
 }
 
 @layer base {

@@ -1,48 +1,33 @@
 {% load icons %}
 {% comment %}
-M3 completion card. The full F-08 summary (volume, PRs, muscles, adherence)
-arrives in M5; this keeps the finish path honest and usable now.
+Post-finish view: the full F-08 summary plus the two next steps (DESIGN §7.6).
 {% endcomment %}
-<section class="ll-card" aria-labelledby="workout-complete">
-  <span class="flex size-14 items-center justify-center rounded-full bg-success/15 text-success" aria-hidden="true">
-    {% icon "trophy" css_class="size-7" %}
-  </span>
-  <h1 id="workout-complete" class="mt-4 text-2xl font-bold">Workout complete</h1>
-  <p class="mt-1 text-[15px] text-base-content/60">
-    {{ session.title }} · {{ session.performed_date|date:"D, M j" }}
-  </p>
-
-  <div class="mt-5 grid grid-cols-3 gap-2 text-center">
-    <div class="rounded-xl bg-base-300/60 px-2 py-3">
-      <p class="text-xl font-bold tabular-nums">{{ session.elapsed_label|default:"—" }}</p>
-      <p class="mt-0.5 text-[11px] uppercase tracking-wider text-base-content/50">Time</p>
-    </div>
-    <div class="rounded-xl bg-base-300/60 px-2 py-3">
-      <p class="text-xl font-bold tabular-nums">{{ session.done_set_count }}/{{ session.target_set_count }}</p>
-      <p class="mt-0.5 text-[11px] uppercase tracking-wider text-base-content/50">Sets</p>
-    </div>
-    <div class="rounded-xl bg-base-300/60 px-2 py-3">
-      <p class="text-xl font-bold tabular-nums">{{ session.done_exercise_count }}/{{ session.exercise_count }}</p>
-      <p class="mt-0.5 text-[11px] uppercase tracking-wider text-base-content/50">Exercises</p>
+<section class="space-y-4" aria-labelledby="workout-complete">
+  <div class="ll-card">
+    <div class="flex items-center gap-3">
+      <span class="flex size-12 shrink-0 items-center justify-center rounded-full bg-success/15 text-success" aria-hidden="true">
+        {% icon "trophy" css_class="size-6" %}
+      </span>
+      <div class="min-w-0">
+        <h1 id="workout-complete" class="text-2xl font-bold">Workout complete</h1>
+        <p class="mt-0.5 text-[14px] text-base-content/60">
+          {{ session.title }} · {{ session.performed_date|date:"D, M j" }}
+        </p>
+      </div>
     </div>
   </div>
 
-  {% if increase_exercises %}
-    <div class="mt-4 rounded-xl bg-success/10 px-3 py-3 text-success">
-      <p class="flex items-center gap-1.5 text-[13px] font-semibold">
-        {% icon "trending-up" css_class="size-4" %}
-        Ready to increase next time
-      </p>
-      <ul class="mt-1 space-y-0.5 text-[14px]">
-        {% for exercise in increase_exercises %}
-          <li>{{ exercise.exercise.name }}</li>
-        {% endfor %}
-      </ul>
-    </div>
+  {% if summary %}
+    {% include "workouts/_summary.html" %}
   {% endif %}
 
-  <a href="{% url 'today' %}" class="btn btn-primary mt-5 h-14 min-h-14 w-full text-[17px] font-semibold">Done</a>
-  <p class="mt-3 text-center text-[12px] text-base-content/40">
-    Volume, records, muscles, and history arrive in the summary milestone.
-  </p>
+  <div class="grid grid-cols-2 gap-2">
+    <a href="{% url 'session_detail' session.pk %}" class="btn btn-neutral h-14 min-h-14 text-[16px] font-semibold">
+      {% icon "pencil" css_class="size-4" %}
+      Edit sets
+    </a>
+    <a href="{% url 'today' %}" class="btn btn-primary h-14 min-h-14 text-[16px] font-semibold">
+      Done
+    </a>
+  </div>
 </section>

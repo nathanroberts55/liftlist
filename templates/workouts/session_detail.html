@@ -37,6 +37,12 @@
       </div>
     {% endif %}
 
+    {% if summary %}
+      <div class="mt-4">
+        {% include "workouts/_summary.html" %}
+      </div>
+    {% endif %}
+
     {% if session.is_in_progress %}
       <div class="ll-card mt-4 border-primary/30 bg-primary/5">
         <p class="text-[15px] text-base-content/70">
