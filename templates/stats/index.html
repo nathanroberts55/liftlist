@@ -66,7 +66,7 @@
           <div class="ll-card mt-3">
             {% if has_chart %}
               <div class="relative h-64 md:h-80">
-                <canvas id="progress-chart" data-chart="line" data-chart-source="progress-chart-data" role="img" aria-label="Top-set weight over time for {{ exercise.name }}"></canvas>
+                <canvas id="progress-chart" data-chart="line" data-chart-source="progress-chart-data" role="img" aria-label="Top-set weight over time for {{ exercise.name }}">Weight progress chart for {{ exercise.name }}. Chart data is unavailable.</canvas>
               </div>
               <p class="mt-2 text-[12px] text-base-content/50">
                 Top set per session. Tap or hover a point for every set that day.
@@ -87,22 +87,26 @@
       <section class="mt-5" aria-labelledby="prs-heading">
         <h2 id="prs-heading" class="text-[13px] font-semibold uppercase tracking-wider text-base-content/50">Personal records</h2>
 
-        <form method="get" action="{% url 'stats' %}" class="mt-2 space-y-2" hx-boost="false">
+        <form method="get" action="{% url 'stats' %}" class="mt-2 space-y-3" hx-boost="false">
           <input type="hidden" name="tab" value="prs">
-          <div class="flex gap-2">
-            <label for="pr-search" class="sr-only">Search exercises</label>
-            <input id="pr-search" type="search" name="q" value="{{ query }}" placeholder="Search exercises" class="ll-input min-w-0 flex-1">
-            <button type="submit" class="btn btn-neutral h-12 min-h-12 px-4 text-[15px] font-semibold">Search</button>
+          <div>
+            <label for="pr-search" class="mb-1 block text-[13px] font-medium text-base-content/60">Search exercises</label>
+            <div class="flex gap-2">
+              <input id="pr-search" type="search" name="q" value="{{ query }}" placeholder="Search by name" class="ll-input min-w-0 flex-1">
+              <button type="submit" class="btn btn-neutral h-12 min-h-12 px-4 text-[15px] font-semibold">Search</button>
+            </div>
           </div>
-          <div class="flex gap-2">
-            <label for="pr-muscle" class="sr-only">Muscle group</label>
-            <select id="pr-muscle" name="muscle" class="ll-input min-w-0 flex-1">
-              <option value="">All muscle groups</option>
-              {% for muscle in muscles %}
-                <option value="{{ muscle.slug }}" {% if muscle.slug == muscle_slug %}selected{% endif %}>{{ muscle.name }}</option>
-              {% endfor %}
-            </select>
-            <button type="submit" class="btn btn-ghost h-12 min-h-12 px-4 text-[15px] font-semibold">Filter</button>
+          <div>
+            <label for="pr-muscle" class="mb-1 block text-[13px] font-medium text-base-content/60">Muscle group</label>
+            <div class="flex gap-2">
+              <select id="pr-muscle" name="muscle" class="ll-input min-w-0 flex-1">
+                <option value="">All muscle groups</option>
+                {% for muscle in muscles %}
+                  <option value="{{ muscle.slug }}" {% if muscle.slug == muscle_slug %}selected{% endif %}>{{ muscle.name }}</option>
+                {% endfor %}
+              </select>
+              <button type="submit" class="btn btn-ghost h-12 min-h-12 px-4 text-[15px] font-semibold">Filter</button>
+            </div>
           </div>
         </form>
 
@@ -165,23 +169,25 @@
           </div>
         </div>
 
-        <form method="get" action="{% url 'stats' %}" class="mt-2 flex gap-2" hx-boost="false">
+        <form method="get" action="{% url 'stats' %}" class="mt-2" hx-boost="false">
           <input type="hidden" name="tab" value="volume">
           <input type="hidden" name="metric" value="{{ metric }}">
-          <label for="volume-tag" class="sr-only">Exclude tag</label>
-          <select id="volume-tag" name="exclude_tag" class="ll-input min-w-0 flex-1">
-            <option value="">No tag excluded</option>
-            {% for tag in tags %}
-              <option value="{{ tag.pk }}" {% if exclude_tag and tag.pk == exclude_tag.pk %}selected{% endif %}>Exclude {{ tag.name }}</option>
-            {% endfor %}
-          </select>
-          <button type="submit" class="btn btn-neutral h-12 min-h-12 px-4 text-[15px] font-semibold">Apply</button>
+          <label for="volume-tag" class="mb-1 block text-[13px] font-medium text-base-content/60">Exclude tag</label>
+          <div class="flex gap-2">
+            <select id="volume-tag" name="exclude_tag" class="ll-input min-w-0 flex-1">
+              <option value="">No tag excluded</option>
+              {% for tag in tags %}
+                <option value="{{ tag.pk }}" {% if exclude_tag and tag.pk == exclude_tag.pk %}selected{% endif %}>Exclude {{ tag.name }}</option>
+              {% endfor %}
+            </select>
+            <button type="submit" class="btn btn-neutral h-12 min-h-12 px-4 text-[15px] font-semibold">Apply</button>
+          </div>
         </form>
 
         <div class="ll-card mt-3">
           {% if has_chart %}
             <div class="relative h-72 md:h-96">
-              <canvas id="volume-chart" data-chart="bar" data-chart-source="volume-chart-data" role="img" aria-label="Weekly {{ metric }} by primary muscle group"></canvas>
+              <canvas id="volume-chart" data-chart="bar" data-chart-source="volume-chart-data" role="img" aria-label="Weekly {{ metric }} by primary muscle group">Weekly {{ metric }} chart by primary muscle group. Chart data is unavailable.</canvas>
             </div>
             <p class="mt-2 text-[12px] text-base-content/50">
               Last 8 ISO weeks (Mon–Sun) · primary muscle group only{% if exclude_tag %} · excluding {{ exclude_tag.name }}{% endif %}
