@@ -159,7 +159,7 @@
       {% endif %}
     </section>
 
-    <div class="mt-8 space-y-3 pb-4">
+    <div class="mt-8 pb-4">
       {% if is_archived %}
         <form method="post" action="{% url 'exercise_restore' exercise.pk %}">
           {% csrf_token %}
@@ -169,52 +169,54 @@
           </button>
         </form>
       {% else %}
-        {% if exercise.is_custom %}
-          <a
-            href="{% url 'exercise_edit' exercise.pk %}"
-            class="btn btn-neutral h-12 min-h-12 w-full gap-2 text-[16px] font-semibold"
-          >
-            {% icon "pencil" css_class="size-5" %}
-            Edit
-          </a>
-        {% endif %}
+        <div class="flex flex-col gap-3 sm:flex-row">
+          {% if exercise.is_custom %}
+            <a
+              href="{% url 'exercise_edit' exercise.pk %}"
+              class="btn btn-neutral h-12 min-h-12 w-full gap-2 text-[16px] font-semibold sm:flex-1"
+            >
+              {% icon "pencil" css_class="size-5" %}
+              Edit
+            </a>
+          {% endif %}
 
-        <div x-data="{ confirmArchive: false }">
-          <button
-            type="button"
-            @click="confirmArchive = true"
-            class="btn btn-ghost h-12 min-h-12 w-full gap-2 text-[16px] font-semibold text-error"
-          >
-            {% icon "archive" css_class="size-5" %}
-            Archive
-          </button>
+          <div class="{% if exercise.is_custom %}sm:flex-1{% else %}w-full{% endif %}" x-data="{ confirmArchive: false }">
+            <button
+              type="button"
+              @click="confirmArchive = true"
+              class="btn btn-ghost h-12 min-h-12 w-full gap-2 text-[16px] font-semibold text-error"
+            >
+              {% icon "archive" css_class="size-5" %}
+              Archive
+            </button>
 
-          <div
-            x-show="confirmArchive"
-            x-cloak
-            class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="archive-title"
-            @click.self="confirmArchive = false"
-          >
-            <div class="ll-card w-full max-w-sm">
-              <h2 id="archive-title" class="text-lg font-semibold">Archive {{ exercise.name }}?</h2>
-              <p class="mt-2 text-sm text-base-content/60">
-                It will be hidden from the library and exercise pickers. Past workouts keep their history.
-              </p>
-              <div class="mt-5 flex gap-3">
-                <button
-                  type="button"
-                  @click="confirmArchive = false"
-                  class="btn btn-neutral h-12 min-h-12 flex-1 text-[16px] font-semibold"
-                >Cancel</button>
-                <form method="post" action="{% url 'exercise_archive' exercise.pk %}" class="flex-1">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-error h-12 min-h-12 w-full text-[16px] font-semibold">
-                    Archive
-                  </button>
-                </form>
+            <div
+              x-show="confirmArchive"
+              x-cloak
+              class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 sm:items-center"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="archive-title"
+              @click.self="confirmArchive = false"
+            >
+              <div class="ll-card w-full max-w-sm">
+                <h2 id="archive-title" class="text-lg font-semibold">Archive {{ exercise.name }}?</h2>
+                <p class="mt-2 text-sm text-base-content/60">
+                  It will be hidden from the library and exercise pickers. Past workouts keep their history.
+                </p>
+                <div class="mt-5 flex gap-3">
+                  <button
+                    type="button"
+                    @click="confirmArchive = false"
+                    class="btn btn-neutral h-12 min-h-12 flex-1 text-[16px] font-semibold"
+                  >Cancel</button>
+                  <form method="post" action="{% url 'exercise_archive' exercise.pk %}" class="flex-1">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-error h-12 min-h-12 w-full text-[16px] font-semibold">
+                      Archive
+                    </button>
+                  </form>
+                </div>
               </div>
             </div>
           </div>
