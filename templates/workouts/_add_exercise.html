@@ -25,7 +25,7 @@
     role="search"
   >
     <input type="hidden" name="panel" value="add">
-    <label for="exercise-search" class="sr-only">Search exercises</label>
+    <label for="exercise-search" class="mb-1 block text-[13px] font-medium text-base-content/60">Search exercises</label>
     <div class="relative">
       <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40" aria-hidden="true">
         {% icon "search" css_class="size-5" %}
@@ -35,7 +35,7 @@
         name="q"
         type="search"
         value="{{ query }}"
-        placeholder="Search exercises"
+        placeholder="Search by name"
         autocomplete="off"
         class="ll-input h-12 min-h-12 pl-10"
         data-autofocus
