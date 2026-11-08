@@ -49,6 +49,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Library services (`apps/exercises/services/library.py`) for listing, grouping, name validation, and create/update/archive/restore, with unit tests; model, form, view, user-isolation, and seed-command tests.
 
 ### Changed
+- M6 polish (in progress): `components/empty_state.html` supports a compact nested variant and consistent actions; plan-day “no exercises” and workout exercise picker empty/no-match states are clearer, with a library link from the runner picker.
 - TECH_SPEC §4.7–4.9 and §5 now describe the records engine, summary dataclass, stats aggregations, chart endpoints, and the rule that Stats links to the History calendar instead of duplicating it.
 - The Stats tab is a real destination instead of a placeholder, and the exercise detail page reuses the stats services for its records and chart.
 - Deployment: added `k8s/ingress.yaml` (Traefik host rule, no TLS block because Cloudflare terminates TLS), made both probes send `Host: liftlist.naterobertstech.com` so Django's `ALLOWED_HOSTS` accepts the kubelet request, switched the single replica to `strategy: Recreate` to avoid concurrent migrations, and documented the gitignored `k8s/secrets.yaml` workflow alongside the committed `k8s/secret.example.yaml`.

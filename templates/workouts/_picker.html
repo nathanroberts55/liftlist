@@ -22,8 +22,16 @@
       {% endfor %}
     </div>
   {% else %}
-    <p class="rounded-xl bg-base-200 px-3 py-3 text-[14px] text-base-content/60">
-      {% if query %}No exercises match “{{ query }}”.{% else %}No exercises available. Add one in the library first.{% endif %}
-    </p>
+    <div class="rounded-xl border border-base-300 bg-base-200 px-4 py-6 text-center">
+      {% icon "search" css_class="mx-auto size-6 text-base-content/40" %}
+      <p class="mt-2 text-[14px] text-base-content/60">
+        {% if query %}
+          No exercises match “{{ query }}”.
+        {% else %}
+          No exercises available.
+          <a href="{% url 'library' %}" class="font-semibold text-primary" hx-boost="false">Add one in the library</a>.
+        {% endif %}
+      </p>
+    </div>
   {% endif %}
 </div>
