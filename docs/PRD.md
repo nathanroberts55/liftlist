@@ -97,6 +97,7 @@ Feature IDs are referenced in commits, PRs, tests, and docs (e.g., `feat(runner)
 | F-10 | Stats (weight over time, PRs, weekly volume by muscle group) | ✅ |
 | F-11 | Settings (theme, default rest, timer sound, default tags, tag management) | ✅ |
 | F-12 | Installable web app (home-screen icon, standalone display) | ✅ |
+| F-13 | Distance entry and units (any decimal, mi/yd/m per exercise) | 🚧 |
 
 ## 8. Functional requirements
 
@@ -126,7 +127,7 @@ Chest, Back, Shoulders, Biceps, Triceps, Forearms, Quads, Hamstrings, Glutes, Ca
 | `WEIGHT_REPS` | weight (lb), reps | both | Squat |
 | `BODYWEIGHT` | reps, added weight (lb) | reps | Pull-up |
 | `TIMED` | duration (sec), added weight (lb) | duration | Plank |
-| `CARDIO` | duration (min:sec), distance (mi) | duration | Walk, Run |
+| `CARDIO` | duration (min:sec), distance (mi) | duration or distance | Walk, Run |
 | `WEIGHT_DISTANCE` | weight (lb), distance (mi), duration | weight | Sled push |
 
 Every set may also have a difficulty rating (1–10, optional).
@@ -250,6 +251,7 @@ The core gym flow. Phone-first and fast.
 - From Today, **+ Unscheduled session** offers two options:
   1. **Plan & start now:** enter a title, pick tags, add exercises with targets → start the Runner (F-05).
   2. **Log past workout:** pick a date (and optional start time and duration), title, tags, then add exercises and enter sets in a simple form (no runner, no timer).
+- Both builders start with **one exercise row**. A session may contain exactly one exercise; **Add another exercise** appends a blank row.
 - Unscheduled sessions do not affect plan adherence.
 - Tags:
   - User-defined (name, color).
@@ -356,6 +358,18 @@ Shown after finishing; also reachable from History.
 - "Add to Home Screen" on iOS/iPadOS opens full-screen with no browser bar.
 - No service worker / offline caching in v1.
 
+### F-13 Distance entry and units
+
+- Distance targets and logged sets accept any decimal value (for example `2.48`); there is no fixed 0.1 increment.
+- `CARDIO` sets accept a duration, a distance, or both. At least one is required.
+- Distance is displayed in miles until per-exercise units land in the next slice.
+- Distance PRs and distance-over-time charts are out of scope for now.
+
+**AC**
+- A walk logged as `2.48 mi` saves and redisplays as `2.48 mi`.
+- A `CARDIO` set with a distance and no duration saves.
+- A `CARDIO` set with neither duration nor distance is rejected with a clear message.
+
 ## 9. Non-functional requirements
 
 | Area | Requirement |
@@ -371,7 +385,7 @@ Shown after finishing; also reachable from History.
 
 ## 10. v1 scope (definition of "usable at the gym")
 
-Planning (F-02, F-03), Scheduling (F-04), Runner + rest timer (F-05), Editing (F-09), Data displays (F-08, F-10), plus F-01, F-06, F-07, F-11, F-12.
+Planning (F-02, F-03), Scheduling (F-04), Runner + rest timer (F-05), Editing (F-09), Data displays (F-08, F-10), plus F-01, F-06, F-07, F-11, F-12, and F-13.
 
 ## 11. Future (not v1)
 

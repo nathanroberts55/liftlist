@@ -93,13 +93,14 @@ steppers are progressive enhancement; inputs stay typeable with JavaScript off.
       </div>
     {% elif tracking_type == "CARDIO" %}
       <div>
-        <label for="duration" class="mb-1.5 block text-sm font-medium">Duration <span class="font-normal text-base-content/50">(mm:ss)</span></label>
-        <input id="duration" name="duration" type="text" inputmode="numeric" pattern="[0-9]+:[0-5][0-9]" value="{{ values.duration }}" placeholder="30:00" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold" required data-autofocus>
+        <label for="duration" class="mb-1.5 block text-sm font-medium">Duration <span class="font-normal text-base-content/50">(mm:ss, optional)</span></label>
+        <input id="duration" name="duration" type="text" inputmode="numeric" pattern="[0-9]+:[0-5][0-9]" value="{{ values.duration }}" placeholder="30:00" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold" data-autofocus>
       </div>
       <div>
         <label for="distance_mi" class="mb-1.5 block text-sm font-medium">Distance (mi) <span class="font-normal text-base-content/50">(optional)</span></label>
-        <input id="distance_mi" name="distance_mi" type="number" inputmode="decimal" step="0.1" min="0" value="{{ values.distance_mi }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold">
+        <input id="distance_mi" name="distance_mi" type="number" inputmode="decimal" step="any" min="0" value="{{ values.distance_mi }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold">
       </div>
+      <p class="text-[12px] text-base-content/50">Enter a duration, a distance, or both.</p>
     {% elif tracking_type == "WEIGHT_DISTANCE" %}
       <div>
         <label for="weight_lb" class="mb-1.5 block text-sm font-medium">Weight (lb)</label>
@@ -111,7 +112,7 @@ steppers are progressive enhancement; inputs stay typeable with JavaScript off.
       </div>
       <div>
         <label for="distance_mi" class="mb-1.5 block text-sm font-medium">Distance (mi) <span class="font-normal text-base-content/50">(optional)</span></label>
-        <input id="distance_mi" name="distance_mi" type="number" inputmode="decimal" step="0.1" min="0" value="{{ values.distance_mi }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold">
+        <input id="distance_mi" name="distance_mi" type="number" inputmode="decimal" step="any" min="0" value="{{ values.distance_mi }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold">
       </div>
     {% endif %}
 

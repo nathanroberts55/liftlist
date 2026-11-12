@@ -1,5 +1,6 @@
 import uuid
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from django.urls import reverse
@@ -219,6 +220,77 @@ def test_log_set_persists_and_redirects(
     log = SetLog.objects.get(session_exercise=session_exercise)
     assert log.weight_lb == 225
     assert log.reps == 8
+
+
+@pytest.mark.django_db
+@freeze_time("2026-11-09 12:00:00")
+def test_log_set_accepts_a_distance_only_cardio_set(
+    client, user, active_plan, active_plan_day, muscles
+):
+    walk = Exercise.objects.create(
+        user=None,
+        name="Walk",
+        primary_muscle=muscles["Quads"],
+        tracking_type=Exercise.TrackingType.CARDIO,
+    )
+    _item(
+        active_plan_day,
+        walk,
+        order=0,
+        target_sets=1,
+        rep_min=None,
+        rep_max=None,
+        target_distance_mi=Decimal("2.48"),
+    )
+    session = _start(user, _scheduled(user, active_plan, active_plan_day))
+    session_exercise = session.session_exercises.get()
+    client.force_login(user)
+
+    response = client.post(
+        reverse("session_log_set", args=[session.pk]),
+        {"exercise": session_exercise.pk, "distance_mi": "2.48"},
+    )
+
+    assert response.status_code == 302
+    log = SetLog.objects.get(session_exercise=session_exercise)
+    assert log.distance_mi == Decimal("2.48")
+    assert log.duration_seconds is None
+
+
+@pytest.mark.django_db
+@freeze_time("2026-11-09 12:00:00")
+def test_rest_screen_shows_a_distance_only_prefill(
+    client, user, active_plan, active_plan_day, muscles
+):
+    walk = Exercise.objects.create(
+        user=None,
+        name="Walk",
+        primary_muscle=muscles["Quads"],
+        tracking_type=Exercise.TrackingType.CARDIO,
+    )
+    _item(
+        active_plan_day,
+        walk,
+        order=0,
+        target_sets=2,
+        rep_min=None,
+        rep_max=None,
+        target_distance_mi=Decimal("2.48"),
+        rest_seconds=60,
+    )
+    session = _start(user, _scheduled(user, active_plan, active_plan_day))
+    session_exercise = session.session_exercises.get()
+    client.force_login(user)
+
+    response = client.post(
+        reverse("session_log_set", args=[session.pk]),
+        {"exercise": session_exercise.pk, "distance_mi": "2.48"},
+        HTTP_HX_REQUEST="true",
+        HTTP_HX_TARGET="runner",
+    )
+
+    assert response.status_code == 200
+    assert b"2.48 mi" in response.content
 
 
 @pytest.mark.django_db

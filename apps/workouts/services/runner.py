@@ -610,8 +610,12 @@ def validate_set_fields(tracking_type: str, data) -> dict:
         distance = None
         reps = None
     elif tracking_type == Exercise.TrackingType.CARDIO:
-        if duration is None or duration < 1:
-            raise ValidationError("Enter duration.")
+        if duration is not None and duration < 1:
+            duration = None
+        if distance is not None and distance <= 0:
+            distance = None
+        if duration is None and distance is None:
+            raise ValidationError("Enter a duration or a distance.")
         weight = None
         reps = None
     elif tracking_type == Exercise.TrackingType.WEIGHT_DISTANCE:

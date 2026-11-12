@@ -730,6 +730,33 @@ def test_validate_cardio_parses_duration_and_distance():
     assert values["reps"] is None
 
 
+def test_validate_cardio_accepts_distance_only():
+    values = runner.validate_set_fields(
+        Exercise.TrackingType.CARDIO,
+        {"distance_mi": "2.48"},
+    )
+
+    assert values["duration_seconds"] is None
+    assert values["distance_mi"] == Decimal("2.48")
+
+
+def test_validate_cardio_accepts_duration_only():
+    values = runner.validate_set_fields(
+        Exercise.TrackingType.CARDIO,
+        {"duration": "45:00"},
+    )
+
+    assert values["duration_seconds"] == 2700
+    assert values["distance_mi"] is None
+
+
+def test_validate_cardio_requires_duration_or_distance():
+    with pytest.raises(ValidationError):
+        runner.validate_set_fields(Exercise.TrackingType.CARDIO, {})
+    with pytest.raises(ValidationError):
+        runner.validate_set_fields(Exercise.TrackingType.CARDIO, {"distance_mi": ""})
+
+
 def test_validate_weight_distance_requires_weight_but_distance_is_optional():
     values = runner.validate_set_fields(
         Exercise.TrackingType.WEIGHT_DISTANCE,

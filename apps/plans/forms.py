@@ -158,7 +158,7 @@ class PlanItemForm(forms.ModelForm):
                     "class": "ll-input",
                     "min": 0,
                     "max": 9999,
-                    "step": "0.1",
+                    "step": "any",
                     "inputmode": "decimal",
                 }
             ),

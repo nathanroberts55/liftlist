@@ -272,7 +272,7 @@ SessionExercise ─1:N─ SetLog
 | completed_at | DateTime | |
 
 - Constraint: unique (`session_exercise`, `set_number`).
-- Validation per tracking type (PRD §8.2) lives in one function `validate_set_fields(tracking_type, data)`, used by the runner and edit forms.
+- Validation per tracking type (PRD §8.2) lives in one function `validate_set_fields(tracking_type, data)`, used by the runner and edit forms. `CARDIO` requires at least one of duration or distance, and distance values are accepted at full decimal precision.
 
 ## 4. Domain services
 
@@ -389,8 +389,8 @@ All views use `LoginRequiredMixin` / `@login_required` except login and healthz.
 | GET | `/plans/<id>/picker/?day=<id>&q=` | exercise picker partial | Focus-group-first sorting; HTMX partial. |
 | POST | `/schedule/<id>/start/` | start scheduled session | Creates the session (or resumes the one in progress) and redirects to the runner. |
 | POST | `/schedule/<id>/mark-missed/` | mark today's workout missed | |
-| GET/POST | `/sessions/new/` | plan & start unscheduled | Title, tags, and exercise rows with targets. `add_row` re-renders the bound formset with one more row; Start creates an in-progress session and redirects to the runner. |
-| GET/POST | `/sessions/log/` | retro log form | Title, date, optional start time/duration, tags, and exercise rows. Creates a completed `is_retro_log` session and redirects to its detail page for set entry. |
+| GET/POST | `/sessions/new/` | plan & start unscheduled | Title, tags, and exercise rows with targets. The builder starts with one row; a session may contain exactly one exercise. `add_row` re-renders the bound formset with one more row; Start creates an in-progress session and redirects to the runner. |
+| GET/POST | `/sessions/log/` | retro log form | Title, date, optional start time/duration, tags, and exercise rows. Starts with one row. Creates a completed `is_retro_log` session and redirects to its detail page for set entry. |
 | GET | `/sessions/<id>/run/` | runner page | Renders the current step or completion card. `?panel=menu|reorder|jump|add` renders a sheet; HTMX returns only `#runner`. |
 | POST | `/sessions/<id>/sets/` | log set | HTMX: rest overlay plus the next step, or the completion card. Plain POST: redirect with rest skipped. |
 | POST | `/sessions/<id>/skip-set/`, `/add-set/`, `/skip-exercise/`, `/add-exercise/`, `/reorder/`, `/move-exercise/`, `/jump/<se_id>/` | runner actions | Each returns `#runner` for HTMX and redirects otherwise. |
@@ -562,7 +562,8 @@ Restore: `pg_restore -c -U liftlist -d liftlist <file>.dump`. A k8s `CronJob` is
   - progression: last-time preference (same plan day first), prefill fallbacks, increase flag (PRD AC cases, extra sets ignored, skipped sets block the flag)
   - records: heaviest weight, rep PR rules (first use of a weight is not a rep PR)
   - summary + aggregations: tonnage, weekly volume grouping, adherence, streak
-  - set validation per tracking type, idempotent `client_id`
+  - set validation per tracking type (including `CARDIO` with duration-only, distance-only, and neither), idempotent `client_id`
+  - unscheduled/retro builders: one-exercise session, `add_row` re-render, distance values with two decimal places (e.g. `2.48`)
 - **View tests:** auth required on every route, user data isolation (user B gets 404 on user A's objects), runner happy path via the test client.
 - Use `freezegun` for any date logic. Never depend on the real current date.
 - CI must pass before merge.

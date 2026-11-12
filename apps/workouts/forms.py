@@ -94,6 +94,10 @@ class SessionTagsMixin(forms.Form):
 class SessionItemForm(forms.Form):
     """One exercise row with targets for a new unscheduled session."""
 
+    # Blank extra rows must not be browser-required; the formset validates that
+    # at least one row has an exercise on the server.
+    use_required_attribute = False
+
     exercise = forms.ModelChoiceField(
         queryset=Exercise.objects.none(),
         empty_label="Choose exercise",
@@ -145,7 +149,7 @@ class SessionItemForm(forms.Form):
                 "class": "ll-input",
                 "min": 0,
                 "max": 9999,
-                "step": "0.1",
+                "step": "any",
                 "inputmode": "decimal",
             }
         ),
@@ -236,7 +240,7 @@ class BaseSessionItemFormSet(forms.BaseFormSet):
 SessionItemFormSet = forms.formset_factory(
     SessionItemForm,
     formset=BaseSessionItemFormSet,
-    extra=2,
+    extra=1,
 )
 
 

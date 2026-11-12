@@ -49,6 +49,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - Library services (`apps/exercises/services/library.py`) for listing, grouping, name validation, and create/update/archive/restore, with unit tests; model, form, view, user-isolation, and seed-command tests.
 
 ### Changed
+- Unscheduled-session builders (F-06) now start with one exercise row. A session may contain exactly one exercise, and blank extra rows are no longer browser-required, so **Log past workout** and **Plan & start now** both save a single-exercise session.
 - M6 polish (in progress, Step 1): `components/empty_state.html` supports a compact nested variant and consistent actions; plan-day “no exercises” and workout exercise picker empty/no-match states are clearer, with a library link from the runner picker.
 - M6 polish (Step 2, iPad/≥768px layouts): library muscle-filter scroll padding now matches `md:px-6` content padding to prevent horizontal bleed; unauthenticated/auth pages use consistent iPad horizontal padding; exercise detail actions lay out side by side on small/tablet widths; Today “On your own” actions use a two-column grid on `sm+` while preserving the in-progress state. Runner remains centered at 480px and phone layout is unchanged.
 - M6 polish (Step 3, accessibility): Stats PR/volume filters and the runner exercise-picker search now use visible labels instead of screen-reader-only labels (DESIGN §10). Progress/volume/exercise charts include fallback text inside `canvas` elements alongside their `role="img"` labels. Focus-visible ring, status-dot text equivalents, timer `aria-live` announcements (10 seconds and rest end), and 44px/16px target/input sizing were verified across key screens.
@@ -70,6 +71,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versioning: [S
 - `python manage.py seed_exercises` is now part of local setup and container startup.
 
 ### Fixed
+- Distance entry (F-13): distance fields accept any decimal value, so a `2.48 mi` walk saves instead of failing browser step validation. `CARDIO` accepts a duration, a distance, or both, and the rest preview shows distance-only sets correctly.
 - Library navigation via the app shell no longer replaces the whole page with the exercise list fragment. The boosted page request now renders the full Library page with the top bar, bottom tab bar, and sidebar; the HTMX list fragment is returned only when the search form targets `#library-list`.
 
 ### Notes

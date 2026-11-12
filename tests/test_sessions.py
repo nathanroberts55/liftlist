@@ -316,6 +316,20 @@ def test_session_new_requires_at_least_one_exercise(client, user, seeded_exercis
 
 
 @pytest.mark.django_db
+@pytest.mark.parametrize("url_name", ["session_new", "session_log"])
+def test_exercise_builder_defaults_to_one_optional_row(client, user, url_name):
+    client.force_login(user)
+
+    content = client.get(reverse(url_name)).content.decode()
+
+    assert re.search(r'name="items-TOTAL_FORMS"[^>]*value="1"', content)
+    assert "items-1-exercise" not in content
+    select = re.search(r'<select[^>]*name="items-0-exercise"[^>]*>', content)
+    assert select is not None
+    assert "required" not in select.group(0)
+
+
+@pytest.mark.django_db
 @freeze_time("2026-11-09 12:00:00")
 def test_session_log_page_defaults_to_today(client, user):
     client.force_login(user)
@@ -347,6 +361,7 @@ def test_session_log_post_creates_a_completed_retro_session(client, user, seeded
     assert session.is_retro_log
     assert session.performed_date == date(2026, 11, 7)
     assert session.duration_seconds == 45 * 60
+    assert session.session_exercises.count() == 1
 
 
 @pytest.mark.django_db

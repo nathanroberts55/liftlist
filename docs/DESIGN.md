@@ -149,6 +149,7 @@ ASCII sketches show layout and content. Exact spacing follows the tokens above.
 Other states:
 - **No workout today:** "Rest day" card plus the Catch up and This week sections.
 - **No active plan:** empty state with "Create plan".
+- **Unscheduled session builder:** starts with a single exercise row; one exercise is a complete session, and **Add another exercise** appends a blank row.
 
 ### 7.3 Runner: set entry (`WEIGHT_REPS`)
 
@@ -179,7 +180,7 @@ Other states:
 Field variants:
 - `BODYWEIGHT`: Reps stepper first, then "Added weight (lb)" (optional, starts at 0).
 - `TIMED`: "Time (sec)" stepper (step 5) plus optional added weight.
-- `CARDIO`: Duration `mm:ss` plus distance (mi, step 0.1).
+- `CARDIO`: Duration `mm:ss` and/or distance (mi). Either one satisfies the set; distance accepts any decimal (e.g. `2.48`).
 - `WEIGHT_DISTANCE`: weight plus optional distance.
 
 Superset: the header shows `Superset A · Round 2 of 3`, and the next-up line shows the next exercise in the group.
