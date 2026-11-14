@@ -50,12 +50,15 @@ def add_exercise(
     planned_sets=None,
     rep_min=None,
     rep_max=None,
+    target_distance_m=None,
+    distance_unit="MI",
     rest_seconds=90,
 ):
     """Attach a SessionExercise plus its sets.
 
-    Each entry in ``sets`` may set ``weight_lb``, ``reps``, ``difficulty``,
-    ``status``, and ``is_extra``; DONE is the default.
+    Each entry in ``sets`` may set ``weight_lb``, ``reps``, ``distance_m``,
+    ``duration_seconds``, ``difficulty``, ``status``, and ``is_extra``; DONE is
+    the default.
     """
     target_sets = target_sets if target_sets is not None else len(sets)
     planned_sets = planned_sets if planned_sets is not None else target_sets
@@ -67,6 +70,8 @@ def add_exercise(
         planned_sets=planned_sets,
         rep_min=rep_min,
         rep_max=rep_max,
+        target_distance_m=_decimal(target_distance_m),
+        distance_unit=distance_unit,
         rest_seconds=rest_seconds,
     )
     for index, values in enumerate(sets, start=1):
@@ -77,7 +82,7 @@ def add_exercise(
             weight_lb=_decimal(values.get("weight_lb")),
             reps=values.get("reps"),
             duration_seconds=values.get("duration_seconds"),
-            distance_mi=_decimal(values.get("distance_mi")),
+            distance_m=_decimal(values.get("distance_m")),
             difficulty=values.get("difficulty"),
             is_extra=values.get("is_extra", False),
         )

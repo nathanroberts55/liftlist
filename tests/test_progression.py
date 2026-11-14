@@ -175,7 +175,7 @@ def test_prefill_without_history_uses_session_targets(user, seeded_exercise):
         "weight_lb": None,
         "reps": 10,
         "duration_seconds": None,
-        "distance_mi": None,
+        "distance_m": None,
     }
 
 
@@ -319,7 +319,7 @@ def test_last_time_display_formats_cardio(user, muscles):
     past = _past(user, exercise, date(2026, 11, 5), [(None, None)])
     SetLog.objects.filter(session_exercise=past).update(
         duration_seconds=1800,
-        distance_mi=Decimal("3.10"),
+        distance_m=Decimal("4988.9664"),
     )
     current = _current(user, exercise)
 

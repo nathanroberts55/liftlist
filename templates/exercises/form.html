@@ -26,7 +26,7 @@
       {% endif %}
     </p>
 
-    <form method="post" class="mt-4 space-y-5 md:mt-6">
+    <form method="post" class="mt-4 space-y-5 md:mt-6" x-data="{ tracking: '{{ form.tracking_type.value|default:'' }}' }">
       {% csrf_token %}
 
       {% if form.non_field_errors %}
@@ -63,6 +63,19 @@
         </label>
         {{ form.tracking_type }}
         {% for error in form.tracking_type.errors %}
+          <p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <div x-show="['CARDIO','DISTANCE'].includes(tracking)">
+        <label for="{{ form.default_distance_unit.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+          {{ form.default_distance_unit.label }}
+        </label>
+        {{ form.default_distance_unit }}
+        <p class="mt-1 text-[12px] text-base-content/50">
+          Used when you add this exercise to a plan or log a set. You can override it per exercise.
+        </p>
+        {% for error in form.default_distance_unit.errors %}
           <p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>
         {% endfor %}
       </div>

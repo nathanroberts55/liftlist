@@ -21,7 +21,7 @@ from apps.workouts.services.summary import (
 
 WEIGHT_TRACKING_TYPES = (
     Exercise.TrackingType.WEIGHT_REPS,
-    Exercise.TrackingType.WEIGHT_DISTANCE,
+    Exercise.TrackingType.DISTANCE,
 )
 
 RANGE_MONTHS = {"3m": 3, "6m": 6, "1y": 12}
@@ -93,11 +93,14 @@ def _completed_logs(user, *, since: date | None = None):
 
 def _set_label(log: SetLog) -> str:
     """Compact label for a set in the chart tooltip."""
+    from apps.exercises.services.units import format_distance
+
     weight = _trim_decimal(log.weight_lb)
     if log.reps is not None:
         return f"{weight} lb × {log.reps}"
-    if log.distance_mi is not None:
-        return f"{weight} lb × {_trim_decimal(log.distance_mi)} mi"
+    if log.distance_m is not None:
+        distance = format_distance(log.distance_m, log.session_exercise.distance_unit)
+        return f"{weight} lb × {distance}"
     return f"{weight} lb"
 
 

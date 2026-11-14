@@ -4,20 +4,22 @@ from django import forms
 from django.core.exceptions import ValidationError
 
 from apps.accounts.services.settings import get_settings
-from apps.exercises.models import Exercise
+from apps.exercises.models import DistanceUnit, Exercise
+from apps.exercises.services import units as distance_units
 
 from .models import Plan, PlanDay, PlanItem
 from .services.plans import clean_item_targets
 
 
 class ExerciseSelect(forms.Select):
-    """Add the tracking type to each option so the UI can show target fields."""
+    """Add tracking type and default distance unit so the UI can adapt fields."""
 
     def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
         option = super().create_option(name, value, label, selected, index, subindex, attrs)
         instance = getattr(value, "instance", None)
         if instance is not None:
             option["attrs"]["data-tracking"] = instance.tracking_type
+            option["attrs"]["data-unit"] = instance.default_distance_unit
         return option
 
 
@@ -122,6 +124,27 @@ class PlanDayForm(forms.ModelForm):
 class PlanItemForm(forms.ModelForm):
     """Exercise, targets by tracking type, rest, and notes."""
 
+    target_distance = forms.DecimalField(
+        required=False,
+        max_digits=12,
+        decimal_places=4,
+        label="Target distance",
+        widget=forms.NumberInput(
+            attrs={
+                "class": "ll-input",
+                "min": 0,
+                "step": "any",
+                "inputmode": "decimal",
+            }
+        ),
+    )
+    distance_unit = forms.ChoiceField(
+        required=False,
+        label="Distance unit",
+        choices=(("", "Exercise default"), *DistanceUnit.choices),
+        widget=forms.Select(attrs={"class": "ll-input", "x-model": "unit"}),
+    )
+
     class Meta:
         model = PlanItem
         fields = [
@@ -130,7 +153,6 @@ class PlanItemForm(forms.ModelForm):
             "rep_min",
             "rep_max",
             "target_seconds",
-            "target_distance_mi",
             "rest_seconds",
             "notes",
         ]
@@ -151,15 +173,6 @@ class PlanItemForm(forms.ModelForm):
                     "min": 1,
                     "max": 86400,
                     "inputmode": "numeric",
-                }
-            ),
-            "target_distance_mi": forms.NumberInput(
-                attrs={
-                    "class": "ll-input",
-                    "min": 0,
-                    "max": 9999,
-                    "step": "any",
-                    "inputmode": "decimal",
                 }
             ),
             "rest_seconds": forms.NumberInput(
@@ -185,7 +198,6 @@ class PlanItemForm(forms.ModelForm):
             "rep_min": "Rep min",
             "rep_max": "Rep max",
             "target_seconds": "Target seconds",
-            "target_distance_mi": "Target distance (mi)",
             "rest_seconds": "Rest (sec)",
             "notes": "Notes / cues",
         }
@@ -200,7 +212,8 @@ class PlanItemForm(forms.ModelForm):
         self.fields["exercise"].widget.attrs.update(
             {
                 "x-on:change": (
-                    "tracking = $event.target.selectedOptions[0] ?.dataset.tracking || ''"
+                    "tracking = $event.target.selectedOptions[0]?.dataset.tracking || ''; "
+                    "unit = $event.target.selectedOptions[0]?.dataset.unit || ''"
                 )
             }
         )
@@ -208,12 +221,26 @@ class PlanItemForm(forms.ModelForm):
         if self.instance.pk is None:
             self.initial.setdefault("target_sets", 3)
             self.initial.setdefault("rest_seconds", get_settings(user).default_rest_seconds)
+        elif not self.is_bound:
+            self.initial.setdefault(
+                "target_distance",
+                distance_units.display_value(
+                    self.instance.target_distance_m,
+                    self.instance.distance_unit,
+                ),
+            )
+            self.initial.setdefault("distance_unit", self.instance.distance_unit)
 
     def clean(self):
         cleaned_data = super().clean()
         exercise = cleaned_data.get("exercise")
         if exercise is None:
             return cleaned_data
+        unit = distance_units.normalize_unit(
+            cleaned_data.get("distance_unit") or exercise.default_distance_unit
+        )
+        display_distance = cleaned_data.get("target_distance")
+        target_distance_m = distance_units.to_meters(display_distance, unit)
         try:
             targets = clean_item_targets(
                 exercise,
@@ -221,14 +248,19 @@ class PlanItemForm(forms.ModelForm):
                 rep_min=cleaned_data.get("rep_min"),
                 rep_max=cleaned_data.get("rep_max"),
                 target_seconds=cleaned_data.get("target_seconds"),
-                target_distance_mi=cleaned_data.get("target_distance_mi"),
+                target_distance_m=target_distance_m,
+                distance_unit=unit,
                 rest_seconds=cleaned_data.get("rest_seconds"),
             )
         except ValidationError as error:
             for field, messages in error.message_dict.items():
-                self.add_error(field, messages)
+                self.add_error(
+                    "target_distance" if field == "target_distance_m" else field,
+                    messages,
+                )
         else:
             cleaned_data.update(targets)
+        cleaned_data.pop("target_distance", None)
         return cleaned_data
 
     @property

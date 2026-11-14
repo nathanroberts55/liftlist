@@ -267,15 +267,21 @@ def test_tag_lookup_is_scoped_to_the_user(user, other_user):
 
 
 @pytest.mark.django_db
-def test_top_set_series_uses_distance_for_weight_distance_exercises(user, muscles):
+def test_top_set_series_uses_distance_for_distance_exercises(user, muscles):
     sled = Exercise.objects.create(
         user=None,
         name="Sled Push",
         primary_muscle=muscles["Quads"],
-        tracking_type=Exercise.TrackingType.WEIGHT_DISTANCE,
+        tracking_type=Exercise.TrackingType.DISTANCE,
+        default_distance_unit="MI",
     )
     session = make_session(user, day=TODAY)
-    add_exercise(session, sled, [{"weight_lb": "180", "distance_mi": "0.5"}])
+    add_exercise(
+        session,
+        sled,
+        [{"weight_lb": "180", "distance_m": "804.6720"}],
+        distance_unit="MI",
+    )
 
     chart = aggregations.top_set_chart(user, sled, "all", TODAY)
 

@@ -180,8 +180,10 @@ Other states:
 Field variants:
 - `BODYWEIGHT`: Reps stepper first, then "Added weight (lb)" (optional, starts at 0).
 - `TIMED`: "Time (sec)" stepper (step 5) plus optional added weight.
-- `CARDIO`: Duration `mm:ss` and/or distance (mi). Either one satisfies the set; distance accepts any decimal (e.g. `2.48`).
-- `WEIGHT_DISTANCE`: weight plus optional distance.
+- `CARDIO`: Duration `mm:ss` and/or distance. Either one satisfies the set; distance accepts any decimal (e.g. `2.48`) and is labelled with the exercise's unit (`Distance (mi)`, `Distance (yd)`, `Distance (m)`).
+- `DISTANCE`: "Distance (mi/yd/m)" first, then "Steps (each way)" (the existing reps stepper), then optional weight. Distance or steps satisfies the set; there is no duration field.
+
+The distance unit is a select (`Miles` / `Yards` / `Meters`) on the exercise form and on plan/session item forms (`Exercise default` stays the default choice). The set screen shows the snapshotted unit in the label; it never offers a unit switch mid-set.
 
 Superset: the header shows `Superset A · Round 2 of 3`, and the next-up line shows the next exercise in the group.
 
@@ -268,7 +270,7 @@ Superset groups move as one block. Each row also has ▲▼ buttons as a fallbac
                                    └──────────────────────────────┘
 ```
 
-Item edit sheet fields: exercise, sets, rep min, rep max (or seconds/distance by tracking type), rest (sec), notes.
+Item edit sheet fields: exercise, sets, rep min, rep max (or seconds/distance by tracking type), distance unit (for `CARDIO`/`DISTANCE`), rest (sec), notes.
 
 ### 7.8 Plan builder (iPad: enhancement)
 

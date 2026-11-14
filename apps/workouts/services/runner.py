@@ -13,7 +13,8 @@ from django.db import transaction
 from django.utils import timezone
 
 from apps.accounts.services.settings import get_settings
-from apps.exercises.models import Exercise
+from apps.exercises.models import DistanceUnit, Exercise
+from apps.exercises.services import units as distance_units
 from apps.plans.services import scheduling
 
 from ..models import Session, SessionExercise, SetLog
@@ -187,7 +188,8 @@ def start_scheduled_session(user, scheduled_workout) -> Session:
                 rep_min=item.rep_min,
                 rep_max=item.rep_max,
                 target_seconds=item.target_seconds,
-                target_distance_mi=item.target_distance_mi,
+                target_distance_m=item.target_distance_m,
+                distance_unit=item.distance_unit,
                 rest_seconds=item.rest_seconds,
             )
             for item in items
@@ -248,7 +250,11 @@ def log_set(
     if existing is not None:
         return existing
 
-    values = validate_set_fields(session_exercise.exercise.tracking_type, data)
+    values = validate_set_fields(
+        session_exercise.exercise.tracking_type,
+        data,
+        distance_unit=session_exercise.distance_unit,
+    )
     set_number = session_exercise.next_set_number
     log = SetLog.objects.create(
         session_exercise=session_exercise,
@@ -332,7 +338,8 @@ def add_exercise(
     rep_min=None,
     rep_max=None,
     target_seconds=None,
-    target_distance_mi=None,
+    target_distance_m=None,
+    distance_unit=None,
     rest_seconds=None,
 ) -> SessionExercise:
     """Add a spur-of-the-moment exercise to this session only."""
@@ -341,6 +348,8 @@ def add_exercise(
         raise ValidationError("Use at least one set.")
     if rest_seconds is None:
         rest_seconds = get_settings(session.user).default_rest_seconds
+    if distance_unit is None:
+        distance_unit = exercise.default_distance_unit
     order = session.session_exercises.order_by("-order").values_list("order", flat=True).first()
     session_exercise = SessionExercise.objects.create(
         session=session,
@@ -351,7 +360,8 @@ def add_exercise(
         rep_min=rep_min,
         rep_max=rep_max,
         target_seconds=target_seconds,
-        target_distance_mi=target_distance_mi,
+        target_distance_m=target_distance_m,
+        distance_unit=distance_unit,
         rest_seconds=rest_seconds,
     )
     return session_exercise
@@ -517,7 +527,15 @@ def _value(data, key):
     return value or None
 
 
-def _decimal(data, key, label, *, required=False) -> Decimal | None:
+def _decimal(
+    data,
+    key,
+    label,
+    *,
+    required=False,
+    maximum=Decimal("9999.99"),
+    quantum=Decimal("0.01"),
+) -> Decimal | None:
     raw = _value(data, key)
     if raw is None:
         if required:
@@ -529,9 +547,9 @@ def _decimal(data, key, label, *, required=False) -> Decimal | None:
         raise ValidationError(f"Enter a valid {label}.") from error
     if number < 0:
         raise ValidationError(f"{label.capitalize()} cannot be negative.")
-    if number > Decimal("9999.99"):
+    if number > maximum:
         raise ValidationError(f"{label.capitalize()} is too large.")
-    return number.quantize(Decimal("0.01"))
+    return number.quantize(quantum)
 
 
 def _integer(
@@ -584,12 +602,29 @@ def _parse_duration(data):
         raise ValidationError("Enter a duration.") from error
 
 
-def validate_set_fields(tracking_type: str, data) -> dict:
-    """Validate a set payload per tracking type (PRD §8.2)."""
+def validate_set_fields(
+    tracking_type: str,
+    data,
+    *,
+    distance_unit=DistanceUnit.MILES,
+) -> dict:
+    """Validate a set payload per tracking type (PRD §8.2).
+
+    ``distance`` arrives in the session exercise's display unit and is stored
+    canonically in metres.
+    """
     weight = _decimal(data, "weight_lb", "weight")
-    reps = _integer(data, "reps", "reps", maximum=1000)
+    reps_label = "steps" if tracking_type == Exercise.TrackingType.DISTANCE else "reps"
+    reps = _integer(data, "reps", reps_label, maximum=1000)
     duration = _parse_duration(data)
-    distance = _decimal(data, "distance_mi", "distance")
+    distance = _decimal(
+        data,
+        "distance",
+        "distance",
+        maximum=Decimal("16093440"),
+        quantum=Decimal("0.0001"),
+    )
+    distance_m = distance_units.to_meters(distance, distance_unit) if distance is not None else None
     difficulty = _integer(data, "difficulty", "difficulty", minimum=1, maximum=10)
 
     if tracking_type == Exercise.TrackingType.WEIGHT_REPS:
@@ -597,31 +632,33 @@ def validate_set_fields(tracking_type: str, data) -> dict:
             raise ValidationError("Enter weight.")
         if reps is None:
             raise ValidationError("Enter reps.")
-        duration = distance = None
+        duration = distance_m = None
     elif tracking_type == Exercise.TrackingType.BODYWEIGHT:
         if reps is None:
             raise ValidationError("Enter reps.")
-        duration = distance = None
+        duration = distance_m = None
     elif tracking_type == Exercise.TrackingType.TIMED:
         if duration is None:
             raise ValidationError("Enter duration.")
         if duration < 1:
             raise ValidationError("Duration must be at least 1 second.")
-        distance = None
+        distance_m = None
         reps = None
     elif tracking_type == Exercise.TrackingType.CARDIO:
         if duration is not None and duration < 1:
             duration = None
-        if distance is not None and distance <= 0:
-            distance = None
-        if duration is None and distance is None:
+        if distance_m is not None and distance_m <= 0:
+            distance_m = None
+        if duration is None and distance_m is None:
             raise ValidationError("Enter a duration or a distance.")
         weight = None
         reps = None
-    elif tracking_type == Exercise.TrackingType.WEIGHT_DISTANCE:
-        if weight is None:
-            raise ValidationError("Enter weight.")
-        reps = None
+    elif tracking_type == Exercise.TrackingType.DISTANCE:
+        if distance_m is not None and distance_m <= 0:
+            distance_m = None
+        if distance_m is None and reps is None:
+            raise ValidationError("Enter a distance or steps.")
+        duration = None
     else:
         raise ValidationError("Unsupported tracking type.")
 
@@ -629,7 +666,7 @@ def validate_set_fields(tracking_type: str, data) -> dict:
         "weight_lb": weight,
         "reps": reps,
         "duration_seconds": duration,
-        "distance_mi": distance,
+        "distance_m": distance_m,
         "difficulty": difficulty,
     }
 

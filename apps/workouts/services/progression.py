@@ -1,6 +1,7 @@
 """Progression services: last time, pre-fill, and the increase flag (F-07)."""
 
 from apps.exercises.models import Exercise
+from apps.exercises.services.units import format_distance
 
 from ..models import Session, SessionExercise, SetLog
 
@@ -57,7 +58,7 @@ def prefill(user, session_exercise: SessionExercise, set_number: int) -> dict:
         "weight_lb": None,
         "reps": session_exercise.rep_max,
         "duration_seconds": session_exercise.target_seconds,
-        "distance_mi": session_exercise.target_distance_mi,
+        "distance_m": session_exercise.target_distance_m,
     }
     if last is None:
         return values
@@ -76,8 +77,8 @@ def prefill(user, session_exercise: SessionExercise, set_number: int) -> dict:
             values["reps"] = same.reps
         if same.duration_seconds is not None:
             values["duration_seconds"] = same.duration_seconds
-        if same.distance_mi is not None:
-            values["distance_mi"] = same.distance_mi
+        if same.distance_m is not None:
+            values["distance_m"] = same.distance_m
     return values
 
 
@@ -126,13 +127,19 @@ def last_time_display(user, session_exercise: SessionExercise) -> str:
     if tracking == Exercise.TrackingType.TIMED:
         return ", ".join(_seconds(log.duration_seconds) for log in logs)
     if tracking == Exercise.TrackingType.CARDIO:
-        return " · ".join(_cardio(log) for log in logs)
-    if tracking == Exercise.TrackingType.WEIGHT_DISTANCE:
-        return ", ".join(
-            f"{_trim(log.weight_lb)} × {_trim(log.distance_mi)} mi"
-            for log in logs
-            if log.weight_lb is not None
-        )
+        return " · ".join(_cardio(log, last.distance_unit) for log in logs)
+    if tracking == Exercise.TrackingType.DISTANCE:
+        parts = []
+        for log in logs:
+            values = []
+            if log.weight_lb is not None:
+                values.append(f"{_trim(log.weight_lb)} lb")
+            if log.reps is not None:
+                values.append(f"{log.reps} steps")
+            if log.distance_m is not None:
+                values.append(format_distance(log.distance_m, last.distance_unit))
+            parts.append(" · ".join(values) or "—")
+        return ", ".join(parts)
     return ""
 
 
@@ -150,10 +157,10 @@ def _seconds(seconds) -> str:
     return f"{remainder}s"
 
 
-def _cardio(log: SetLog) -> str:
+def _cardio(log: SetLog, distance_unit) -> str:
     parts = []
     if log.duration_seconds is not None:
         parts.append(_seconds(log.duration_seconds))
-    if log.distance_mi is not None:
-        parts.append(f"{_trim(log.distance_mi)} mi")
+    if log.distance_m is not None:
+        parts.append(format_distance(log.distance_m, distance_unit))
     return " · ".join(parts) or "—"

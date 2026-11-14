@@ -69,7 +69,7 @@
       {% endif %}
 
       <div class="order-1 lg:order-2">
-        <form method="post" action="{% if is_edit %}{% url 'plan_item_edit' plan.pk item.pk %}{% else %}{% url 'plan_item_new' plan.pk day.pk %}{% endif %}" class="ll-card" x-data="{ tracking: '{{ selected_tracking|escapejs }}' }" hx-boost="false">
+        <form method="post" action="{% if is_edit %}{% url 'plan_item_edit' plan.pk item.pk %}{% else %}{% url 'plan_item_new' plan.pk day.pk %}{% endif %}" class="ll-card" x-data="{ tracking: '{{ selected_tracking|escapejs }}', unit: '{{ form.distance_unit.value|default:'' }}' }" hx-boost="false">
           {% csrf_token %}
 
           {% if form.non_field_errors %}
@@ -91,7 +91,7 @@
           </p>
 
           <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div x-show="['WEIGHT_REPS','BODYWEIGHT','TIMED','WEIGHT_DISTANCE'].includes(tracking)">
+            <div x-show="['WEIGHT_REPS','BODYWEIGHT','TIMED','DISTANCE'].includes(tracking)">
               <label for="{{ form.target_sets.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_sets.label }}</label>
               {{ form.target_sets }}
               {% for error in form.target_sets.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
@@ -111,10 +111,15 @@
               {{ form.target_seconds }}
               {% for error in form.target_seconds.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
             </div>
-            <div x-show="['CARDIO','WEIGHT_DISTANCE'].includes(tracking)">
-              <label for="{{ form.target_distance_mi.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_distance_mi.label }}</label>
-              {{ form.target_distance_mi }}
-              {% for error in form.target_distance_mi.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            <div x-show="['CARDIO','DISTANCE'].includes(tracking)">
+              <label for="{{ form.target_distance.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_distance.label }}</label>
+              {{ form.target_distance }}
+              {% for error in form.target_distance.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+            </div>
+            <div x-show="['CARDIO','DISTANCE'].includes(tracking)">
+              <label for="{{ form.distance_unit.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.distance_unit.label }}</label>
+              {{ form.distance_unit }}
+              {% for error in form.distance_unit.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
             </div>
           </div>
           <p class="mt-2 text-[12px] text-base-content/40" x-show="tracking === 'CARDIO'">

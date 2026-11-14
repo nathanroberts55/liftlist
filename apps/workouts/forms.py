@@ -5,7 +5,8 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from apps.accounts.services.settings import get_settings
-from apps.exercises.models import Exercise
+from apps.exercises.models import DistanceUnit, Exercise
+from apps.exercises.services import units as distance_units
 from apps.plans.forms import ExerciseSelect
 from apps.plans.services.plans import clean_item_targets
 
@@ -18,7 +19,6 @@ ITEM_TARGET_FIELDS = (
     "rep_min",
     "rep_max",
     "target_seconds",
-    "target_distance_mi",
     "rest_seconds",
 )
 
@@ -104,7 +104,10 @@ class SessionItemForm(forms.Form):
         widget=ExerciseSelect(
             attrs={
                 "class": "ll-input",
-                "x-on:change": "tracking = $event.target.selectedOptions[0]?.dataset.tracking || ''",
+                "x-on:change": (
+                    "tracking = $event.target.selectedOptions[0]?.dataset.tracking || ''; "
+                    "unit = $event.target.selectedOptions[0]?.dataset.unit || ''"
+                ),
             }
         ),
     )
@@ -140,19 +143,25 @@ class SessionItemForm(forms.Form):
             attrs={"class": "ll-input", "min": 1, "max": 86400, "inputmode": "numeric"}
         ),
     )
-    target_distance_mi = forms.DecimalField(
+    target_distance = forms.DecimalField(
         required=False,
-        max_digits=6,
-        decimal_places=2,
+        max_digits=12,
+        decimal_places=4,
+        label="Target distance",
         widget=forms.NumberInput(
             attrs={
                 "class": "ll-input",
                 "min": 0,
-                "max": 9999,
                 "step": "any",
                 "inputmode": "decimal",
             }
         ),
+    )
+    distance_unit = forms.ChoiceField(
+        required=False,
+        label="Distance unit",
+        choices=(("", "Exercise default"), *DistanceUnit.choices),
+        widget=forms.Select(attrs={"class": "ll-input", "x-model": "unit"}),
     )
     rest_seconds = forms.IntegerField(
         required=False,
@@ -189,11 +198,23 @@ class SessionItemForm(forms.Form):
             targets["target_sets"] = 3
         if targets["rest_seconds"] in (None, ""):
             targets["rest_seconds"] = get_settings(self.user).default_rest_seconds
+        unit = distance_units.normalize_unit(
+            cleaned.get("distance_unit") or exercise.default_distance_unit
+        )
+        targets["target_distance_m"] = distance_units.to_meters(
+            cleaned.get("target_distance"),
+            unit,
+        )
+        targets["distance_unit"] = unit
         try:
             cleaned.update(clean_item_targets(exercise, **targets))
         except ValidationError as error:
             for field, messages in error.message_dict.items():
-                self.add_error(field, messages)
+                self.add_error(
+                    "target_distance" if field == "target_distance_m" else field,
+                    messages,
+                )
+        cleaned.pop("target_distance", None)
         return cleaned
 
     @property
@@ -389,14 +410,14 @@ class SetLogForm(forms.Form):
         ),
         label="Duration",
     )
-    distance_mi = forms.DecimalField(
+    distance = forms.DecimalField(
         required=False,
-        max_digits=6,
-        decimal_places=2,
+        max_digits=12,
+        decimal_places=4,
         widget=forms.NumberInput(
-            attrs={"class": "ll-input", "min": 0, "step": "0.1", "inputmode": "decimal"}
+            attrs={"class": "ll-input", "min": 0, "step": "any", "inputmode": "decimal"}
         ),
-        label="Distance (mi)",
+        label="Distance",
     )
     difficulty = forms.IntegerField(
         required=False,
@@ -407,14 +428,22 @@ class SetLogForm(forms.Form):
         ),
     )
 
-    def __init__(self, *args, tracking_type, **kwargs):
+    def __init__(self, *args, tracking_type, distance_unit=DistanceUnit.MILES, **kwargs):
         super().__init__(*args, **kwargs)
         self.tracking_type = tracking_type
+        self.distance_unit = distance_units.normalize_unit(distance_unit)
+        self.fields["distance"].label = f"Distance ({self.distance_unit.short_label})"
+        if tracking_type == Exercise.TrackingType.DISTANCE:
+            self.fields["reps"].label = "Steps (each way)"
 
     def clean(self):
         cleaned = super().clean()
         try:
-            values = runner.validate_set_fields(self.tracking_type, cleaned)
+            values = runner.validate_set_fields(
+                self.tracking_type,
+                cleaned,
+                distance_unit=self.distance_unit,
+            )
         except ValidationError as error:
             raise forms.ValidationError(error.messages) from error
         cleaned.update(values)

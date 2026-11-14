@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db import models
 from django.db.models import F, Q
 
+from apps.exercises.models import DistanceUnit
+
 
 class Weekday(models.IntegerChoices):
     """Python ``date.weekday()`` values, so no conversion is needed."""
@@ -160,11 +162,16 @@ class PlanItem(models.Model):
     rep_min = models.PositiveSmallIntegerField(null=True, blank=True)
     rep_max = models.PositiveSmallIntegerField(null=True, blank=True)
     target_seconds = models.PositiveIntegerField(null=True, blank=True)
-    target_distance_mi = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
+    target_distance_m = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
         null=True,
         blank=True,
+    )
+    distance_unit = models.CharField(
+        max_length=2,
+        choices=DistanceUnit.choices,
+        default=DistanceUnit.MILES,
     )
     rest_seconds = models.PositiveSmallIntegerField(default=90)
     notes = models.CharField(max_length=200, blank=True)
@@ -220,14 +227,23 @@ class PlanItem(models.Model):
             parts = []
             if self.target_seconds:
                 parts.append(_format_seconds(self.target_seconds))
-            if self.target_distance_mi is not None:
-                parts.append(f"{_trim_decimal(self.target_distance_mi)} mi")
+            if self.target_distance_m is not None:
+                from apps.exercises.services.units import format_distance
+
+                parts.append(format_distance(self.target_distance_m, self.distance_unit))
             return " · ".join(parts) or "1 set"
-        if tracking == Exercise.TrackingType.WEIGHT_DISTANCE:
-            if self.target_distance_mi is not None:
-                return f"{self.target_sets} × {_trim_decimal(self.target_distance_mi)} mi"
+        if tracking == Exercise.TrackingType.DISTANCE:
+            if self.target_distance_m is not None:
+                from apps.exercises.services.units import format_distance
+
+                distance = format_distance(self.target_distance_m, self.distance_unit)
+                return f"{self.target_sets} × {distance}"
             return f"{self.target_sets} sets"
         return f"{self.target_sets} sets"
+
+    @property
+    def distance_unit_short(self) -> str:
+        return DistanceUnit(self.distance_unit).short_label
 
     @property
     def rest_label(self) -> str:
@@ -239,10 +255,6 @@ def _format_seconds(seconds: int) -> str:
     if minutes:
         return f"{minutes}:{remainder:02d}"
     return f"{remainder}s"
-
-
-def _trim_decimal(value) -> str:
-    return f"{value:.2f}".rstrip("0").rstrip(".")
 
 
 class ScheduledWorkoutQuerySet(models.QuerySet):

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import pytest
 
 from apps.exercises.models import Exercise
@@ -129,6 +131,82 @@ def test_exercise_select_adds_the_tracking_type(user, plan_day, seeded_exercise)
     html = str(form["exercise"])
 
     assert f'data-tracking="{Exercise.TrackingType.WEIGHT_REPS}"' in html
+    assert 'data-unit="MI"' in html
+
+
+@pytest.mark.django_db
+def test_plan_item_form_converts_distance_from_the_override_unit(user, plan_day, muscles):
+    sled = Exercise.objects.create(
+        user=None,
+        name="Sled Push",
+        primary_muscle=muscles["Quads"],
+        tracking_type=Exercise.TrackingType.DISTANCE,
+        default_distance_unit="YD",
+    )
+    form = PlanItemForm(
+        data={
+            "exercise": sled.pk,
+            "target_sets": 4,
+            "target_distance": "15",
+            "distance_unit": "YD",
+            "rest_seconds": 90,
+        },
+        user=user,
+        day=plan_day,
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["target_distance_m"] == Decimal("13.7160")
+    assert form.cleaned_data["distance_unit"] == "YD"
+
+
+@pytest.mark.django_db
+def test_plan_item_form_uses_the_exercise_default_unit(user, plan_day, muscles):
+    sled = Exercise.objects.create(
+        user=None,
+        name="Sled Push",
+        primary_muscle=muscles["Quads"],
+        tracking_type=Exercise.TrackingType.DISTANCE,
+        default_distance_unit="YD",
+    )
+    form = PlanItemForm(
+        data={
+            "exercise": sled.pk,
+            "target_sets": 4,
+            "target_distance": "15",
+            "distance_unit": "",
+            "rest_seconds": 90,
+        },
+        user=user,
+        day=plan_day,
+    )
+
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["target_distance_m"] == Decimal("13.7160")
+    assert form.cleaned_data["distance_unit"] == "YD"
+
+
+@pytest.mark.django_db
+def test_plan_item_form_edit_shows_distance_in_the_snapshotted_unit(user, plan_day, muscles):
+    sled = Exercise.objects.create(
+        user=None,
+        name="Sled Push",
+        primary_muscle=muscles["Quads"],
+        tracking_type=Exercise.TrackingType.DISTANCE,
+        default_distance_unit="YD",
+    )
+    item = PlanItem.objects.create(
+        plan_day=plan_day,
+        exercise=sled,
+        target_sets=3,
+        target_distance_m=Decimal("13.7160"),
+        distance_unit="YD",
+    )
+
+    form = PlanItemForm(instance=item, user=user, day=plan_day)
+
+    assert form.initial["target_distance"] == "15"
+    assert form.initial["distance_unit"] == "YD"
 
 
 @pytest.mark.django_db

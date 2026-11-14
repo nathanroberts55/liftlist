@@ -68,7 +68,8 @@ These terms are used consistently in all docs, code, and UI.
 | **Session** | An actual workout performed (or in progress). Either linked to a Scheduled Workout, or **unscheduled**. |
 | **Unscheduled Session** | A session not generated from the plan, such as PT or an extra workout. Can be run live or logged after the fact. |
 | **Session Exercise** | A snapshot of an exercise inside a Session, with its targets copied at start time so plan edits never change history. |
-| **Set Log** | One recorded set: weight, reps, duration, distance, difficulty (as applicable). |
+| **Set Log** | One recorded set: weight, reps, duration, distance, steps, difficulty (as applicable). |
+| **Distance unit** | The unit a distance is shown in: miles (`MI`), yards (`YD`), or metres (`M`). Chosen per exercise and snapshotted onto Plan Items and Session Exercises. Stored canonically in metres. |
 | **Working set** | Any logged set. (Warm-ups are not tracked in v1, so every logged set counts as a working set.) |
 | **Missed** | A Scheduled Workout whose date passed without being completed on that date. |
 | **Made up** | A Scheduled Workout completed on a later date. It still counts as **missed** for its original date. |
@@ -127,10 +128,12 @@ Chest, Back, Shoulders, Biceps, Triceps, Forearms, Quads, Hamstrings, Glutes, Ca
 | `WEIGHT_REPS` | weight (lb), reps | both | Squat |
 | `BODYWEIGHT` | reps, added weight (lb) | reps | Pull-up |
 | `TIMED` | duration (sec), added weight (lb) | duration | Plank |
-| `CARDIO` | duration (min:sec), distance (mi) | duration or distance | Walk, Run |
-| `WEIGHT_DISTANCE` | weight (lb), distance (mi), duration | weight | Sled push |
+| `CARDIO` | duration (min:sec), distance (exercise unit) | duration or distance | Walk, Run |
+| `DISTANCE` | distance (exercise unit), steps, weight (lb) | distance or steps | Sled push, Farmer's carry |
 
-Every set may also have a difficulty rating (1–10, optional).
+Every set may also have a difficulty rating (1–10, optional). Each exercise has a
+default distance unit (miles, yards, or metres); `CARDIO` defaults to miles and
+carries to their own unit by default.
 
 #### Requirements
 
@@ -159,7 +162,7 @@ Every set may also have a difficulty rating (1–10, optional).
     - `WEIGHT_REPS` / `BODYWEIGHT`: sets, rep min, rep max
     - `TIMED`: sets, target seconds
     - `CARDIO`: target duration and/or distance (1 set)
-    - `WEIGHT_DISTANCE`: sets, optional target distance
+    - `DISTANCE`: sets, optional target distance
   - rest seconds (defaults to the user's default rest setting)
   - optional superset group
   - optional notes (cues)
@@ -340,7 +343,7 @@ Shown after finishing; also reachable from History.
 4. **Workout history calendar:** see F-09 (linked from Stats).
 
 **PR rules**
-- **Heaviest weight:** max weight across completed `WEIGHT_REPS` / `WEIGHT_DISTANCE` sets (reps ≥ 1 where applicable).
+- **Heaviest weight:** max weight across completed `WEIGHT_REPS` / `DISTANCE` sets (reps ≥ 1 where applicable). Distance PRs are deferred.
 - **Most reps at weight:** for a given exact weight, the max reps. A new PR is set when reps exceed all previous sets at that exact weight. The first time a weight is used does **not** count as a rep PR. It counts as a heaviest-weight PR only if it is the heaviest ever.
 
 ### F-11 Settings
@@ -361,14 +364,20 @@ Shown after finishing; also reachable from History.
 ### F-13 Distance entry and units
 
 - Distance targets and logged sets accept any decimal value (for example `2.48`); there is no fixed 0.1 increment.
+- Each exercise has a default distance unit: miles (`MI`), yards (`YD`), or metres (`M`). Feet are not supported.
+- The unit is chosen per exercise and can be overridden per Plan Item / Session Exercise. The chosen unit is snapshotted, so changing an exercise's default later never rewrites history.
+- Distances are stored canonically in metres to four decimal places. `1 mi = 1609.344 m`, `1 yd = 0.9144 m`.
 - `CARDIO` sets accept a duration, a distance, or both. At least one is required.
-- Distance is displayed in miles until per-exercise units land in the next slice.
+- `DISTANCE` sets accept a distance, steps, or both. Weight is optional. There is no duration field. Steps reuse the reps field and are labelled "Steps (each way)".
 - Distance PRs and distance-over-time charts are out of scope for now.
 
 **AC**
 - A walk logged as `2.48 mi` saves and redisplays as `2.48 mi`.
+- `15 yd` and `400 m` round-trip in their own units.
+- A sled set entered as `15 yd` shows as `15 yd` in history, even after the exercise default changes.
 - A `CARDIO` set with a distance and no duration saves.
 - A `CARDIO` set with neither duration nor distance is rejected with a clear message.
+- A `DISTANCE` set with steps and no distance saves; one with neither distance nor steps is rejected.
 
 ## 9. Non-functional requirements
 
@@ -379,7 +388,7 @@ Shown after finishing; also reachable from History.
 | Reliability | Each set persists on Submit. No data is held only in the browser. |
 | Security | Login required. CSRF on all POSTs. Secrets via environment variables. HTTPS terminated by Cloudflare. |
 | Data integrity | Completed history is immutable to plan edits (snapshot targets). DB constraints for single active plan and idempotent set submits. |
-| Units | Pounds and miles only (no unit switching in v1). |
+| Units | Pounds; distance in miles, yards, or metres (no feet). Canonical storage in metres. |
 | Timezone | `America/New_York`. "Today" uses local date. |
 | Accessibility | WCAG AA contrast in both themes. Labels on all inputs. Timer uses `aria-live`. |
 

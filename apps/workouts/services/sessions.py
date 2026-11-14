@@ -29,7 +29,10 @@ def _target_kwargs(item) -> dict:
         "rep_min": item.get("rep_min"),
         "rep_max": item.get("rep_max"),
         "target_seconds": item.get("target_seconds"),
-        "target_distance_mi": item.get("target_distance_mi"),
+        "target_distance_m": item.get("target_distance_m"),
+        "distance_unit": item["exercise"].default_distance_unit
+        if item.get("distance_unit") is None
+        else item["distance_unit"],
         "rest_seconds": item.get("rest_seconds", 90),
     }
 
@@ -166,7 +169,11 @@ def _assert_editable(user, session: Session, session_exercise: SessionExercise) 
 def add_manual_set(user, session: Session, session_exercise: SessionExercise, data) -> SetLog:
     """Add a set to a completed session from the history detail screen."""
     _assert_editable(user, session, session_exercise)
-    values = runner.validate_set_fields(session_exercise.exercise.tracking_type, data)
+    values = runner.validate_set_fields(
+        session_exercise.exercise.tracking_type,
+        data,
+        distance_unit=session_exercise.distance_unit,
+    )
     set_number = session_exercise.next_set_number
     log = SetLog.objects.create(
         session_exercise=session_exercise,
@@ -186,7 +193,11 @@ def update_manual_set(user, set_log: SetLog, data) -> SetLog:
     session_exercise = set_log.session_exercise
     session = session_exercise.session
     _assert_editable(user, session, session_exercise)
-    values = runner.validate_set_fields(session_exercise.exercise.tracking_type, data)
+    values = runner.validate_set_fields(
+        session_exercise.exercise.tracking_type,
+        data,
+        distance_unit=session_exercise.distance_unit,
+    )
     set_log.status = SetLog.Status.DONE
     for field, value in values.items():
         setattr(set_log, field, value)
@@ -196,7 +207,7 @@ def update_manual_set(user, set_log: SetLog, data) -> SetLog:
             "weight_lb",
             "reps",
             "duration_seconds",
-            "distance_mi",
+            "distance_m",
             "difficulty",
         ]
     )

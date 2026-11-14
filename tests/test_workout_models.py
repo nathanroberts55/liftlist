@@ -162,7 +162,8 @@ def test_session_exercise_target_labels_for_cardio(user, muscles):
         exercise,
         target_sets=1,
         target_seconds=1800,
-        target_distance_mi=Decimal("3.10"),
+        target_distance_m=Decimal("4988.9664"),
+        distance_unit="MI",
     )
 
     assert session_exercise.target_summary == "30:00 · 3.1 mi"
@@ -170,23 +171,25 @@ def test_session_exercise_target_labels_for_cardio(user, muscles):
 
 
 @pytest.mark.django_db
-def test_session_exercise_target_labels_for_weight_distance(user, muscles):
+def test_session_exercise_target_labels_for_distance(user, muscles):
     exercise = Exercise.objects.create(
         user=None,
         name="Sled Push",
         primary_muscle=muscles["Quads"],
-        tracking_type=Exercise.TrackingType.WEIGHT_DISTANCE,
+        tracking_type=Exercise.TrackingType.DISTANCE,
+        default_distance_unit="YD",
     )
     session = _session(user)
     session_exercise = _exercise(
         session,
         exercise,
         target_sets=4,
-        target_distance_mi=Decimal("0.50"),
+        target_distance_m=Decimal("13.7160"),
+        distance_unit="YD",
     )
 
-    assert session_exercise.target_summary == "4 × 0.5 mi"
-    assert session_exercise.goal_label == "Goal 0.5 mi"
+    assert session_exercise.target_summary == "4 × 15 yd"
+    assert session_exercise.goal_label == "Goal 15 yd"
 
 
 @pytest.mark.django_db
@@ -211,16 +214,17 @@ def test_set_display_values_for_each_tracking_type(user, muscles, seeded_exercis
         primary_muscle=muscles["Quads"],
         tracking_type=Exercise.TrackingType.CARDIO,
     )
-    weight_distance_exercise = Exercise.objects.create(
+    distance_exercise = Exercise.objects.create(
         user=None,
         name="Sled Push",
         primary_muscle=muscles["Quads"],
-        tracking_type=Exercise.TrackingType.WEIGHT_DISTANCE,
+        tracking_type=Exercise.TrackingType.DISTANCE,
+        default_distance_unit="YD",
     )
     bodyweight = _exercise(session, bodyweight_exercise, order=1)
     timed = _exercise(session, timed_exercise, order=2)
     cardio = _exercise(session, cardio_exercise, order=3)
-    weight_distance = _exercise(session, weight_distance_exercise, order=4)
+    distance = _exercise(session, distance_exercise, order=4, distance_unit="YD")
 
     assert (
         SetLog.objects.create(
@@ -245,16 +249,17 @@ def test_set_display_values_for_each_tracking_type(user, muscles, seeded_exercis
             session_exercise=cardio,
             set_number=1,
             duration_seconds=1800,
-            distance_mi=Decimal("3.10"),
+            distance_m=Decimal("4988.9664"),
         ).display_value
         == "30:00 · 3.1 mi"
     )
     assert (
         SetLog.objects.create(
-            session_exercise=weight_distance,
+            session_exercise=distance,
             set_number=1,
             weight_lb=100,
-            distance_mi=Decimal("0.50"),
+            reps=30,
+            distance_m=Decimal("13.7160"),
         ).display_value
-        == "100 × 0.5 mi"
+        == "100 lb · 30 steps · 15 yd"
     )

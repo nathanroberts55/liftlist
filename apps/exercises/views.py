@@ -128,6 +128,7 @@ def edit(request, pk):
                 "name": exercise.name,
                 "primary_muscle": exercise.primary_muscle_id,
                 "tracking_type": exercise.tracking_type,
+                "default_distance_unit": exercise.default_distance_unit,
                 "secondary_muscles": exercise.secondary_muscles.all(),
                 "notes": exercise.notes,
             },

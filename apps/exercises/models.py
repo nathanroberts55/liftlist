@@ -6,6 +6,18 @@ from django.db.models import Q
 from django.db.models.functions import Lower
 
 
+class DistanceUnit(models.TextChoices):
+    """The units a distance may be entered and displayed in (F-13)."""
+
+    MILES = "MI", "Miles"
+    YARDS = "YD", "Yards"
+    METERS = "M", "Meters"
+
+    @property
+    def short_label(self) -> str:
+        return {"MI": "mi", "YD": "yd", "M": "m"}[self.value]
+
+
 class MuscleGroup(models.Model):
     """A fixed, seeded muscle group. Read-only in the UI."""
 
@@ -53,7 +65,7 @@ class Exercise(models.Model):
         BODYWEIGHT = "BODYWEIGHT", "Bodyweight"
         TIMED = "TIMED", "Timed"
         CARDIO = "CARDIO", "Cardio"
-        WEIGHT_DISTANCE = "WEIGHT_DISTANCE", "Weight × Distance"
+        DISTANCE = "DISTANCE", "Distance"
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -77,6 +89,12 @@ class Exercise(models.Model):
         max_length=20,
         choices=TrackingType.choices,
         default=TrackingType.WEIGHT_REPS,
+    )
+    default_distance_unit = models.CharField(
+        max_length=2,
+        choices=DistanceUnit.choices,
+        default=DistanceUnit.MILES,
+        help_text="Used for CARDIO and DISTANCE exercises unless an item overrides it.",
     )
     notes = models.TextField(blank=True)
     is_archived = models.BooleanField(
@@ -114,6 +132,10 @@ class Exercise(models.Model):
     @property
     def is_custom(self) -> bool:
         return self.user_id is not None
+
+    @property
+    def distance_unit_short(self) -> str:
+        return DistanceUnit(self.default_distance_unit).short_label
 
 
 class ExerciseArchive(models.Model):

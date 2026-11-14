@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST
 
 from apps.accounts.services.settings import get_settings
 from apps.exercises.models import Exercise
+from apps.exercises.services import units as distance_units
 from apps.exercises.services.library import grouped_by_muscle, list_exercises
 from apps.plans.models import Plan, ScheduledWorkout
 
@@ -93,7 +94,10 @@ def _prefill_values(user, session_exercise: SessionExercise, set_number: int) ->
         "reps": "" if data["reps"] is None else data["reps"],
         "duration_seconds": "" if data["duration_seconds"] is None else data["duration_seconds"],
         "duration": _duration_text(data["duration_seconds"]),
-        "distance_mi": _decimal_text(data["distance_mi"]),
+        "distance": distance_units.display_value(
+            data["distance_m"],
+            session_exercise.distance_unit,
+        ),
         "difficulty": "",
     }
 
@@ -575,6 +579,7 @@ def session_detail(request, pk):
     for exercise in exercises:
         exercise.add_form = SetLogForm(
             tracking_type=exercise.exercise.tracking_type,
+            distance_unit=exercise.distance_unit,
             auto_id=f"add-{exercise.pk}-%s",
         )
     return render(
@@ -667,7 +672,10 @@ def _set_initial(set_log: SetLog) -> dict:
         "weight_lb": _decimal_text(set_log.weight_lb),
         "reps": set_log.reps,
         "duration": _duration_text(set_log.duration_seconds),
-        "distance_mi": _decimal_text(set_log.distance_mi),
+        "distance": distance_units.display_value(
+            set_log.distance_m,
+            set_log.session_exercise.distance_unit,
+        ),
         "difficulty": set_log.difficulty,
     }
 
@@ -679,6 +687,7 @@ def set_add(request, pk):
     form = SetLogForm(
         request.POST,
         tracking_type=session_exercise.exercise.tracking_type,
+        distance_unit=session_exercise.distance_unit,
     )
     if form.is_valid():
         try:
@@ -705,8 +714,13 @@ def set_row(request, pk):
 def set_edit(request, pk):
     set_log = _get_set_log(request.user, pk)
     tracking_type = set_log.session_exercise.exercise.tracking_type
+    distance_unit = set_log.session_exercise.distance_unit
     if request.method == "POST":
-        form = SetLogForm(request.POST, tracking_type=tracking_type)
+        form = SetLogForm(
+            request.POST,
+            tracking_type=tracking_type,
+            distance_unit=distance_unit,
+        )
         if form.is_valid():
             try:
                 session_services.update_manual_set(request.user, set_log, form.cleaned_data)
@@ -730,6 +744,7 @@ def set_edit(request, pk):
     else:
         form = SetLogForm(
             tracking_type=tracking_type,
+            distance_unit=distance_unit,
             initial=_set_initial(set_log),
         )
         if _is_row_request(request, set_log):

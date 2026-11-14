@@ -2,7 +2,7 @@
 
 from django import forms
 
-from .models import Exercise, MuscleGroup
+from .models import DistanceUnit, Exercise, MuscleGroup
 from .services.library import validate_name
 
 
@@ -31,6 +31,12 @@ class ExerciseForm(forms.Form):
     tracking_type = forms.ChoiceField(
         choices=Exercise.TrackingType.choices,
         label="Tracking type",
+        widget=forms.Select(attrs={"class": "ll-input", "x-model": "tracking"}),
+    )
+    default_distance_unit = forms.ChoiceField(
+        choices=DistanceUnit.choices,
+        label="Default distance unit",
+        required=False,
         widget=forms.Select(attrs={"class": "ll-input"}),
     )
     secondary_muscles = forms.ModelMultipleChoiceField(
@@ -51,7 +57,14 @@ class ExerciseForm(forms.Form):
         ),
     )
 
-    field_order = ["name", "primary_muscle", "tracking_type", "secondary_muscles", "notes"]
+    field_order = [
+        "name",
+        "primary_muscle",
+        "tracking_type",
+        "default_distance_unit",
+        "secondary_muscles",
+        "notes",
+    ]
 
     def __init__(self, *args, user, exclude: Exercise | None = None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -64,6 +77,9 @@ class ExerciseForm(forms.Form):
             self.cleaned_data["name"],
             exclude=self.exclude,
         )
+
+    def clean_default_distance_unit(self):
+        return self.cleaned_data.get("default_distance_unit") or DistanceUnit.MILES
 
     def clean(self):
         cleaned_data = super().clean()

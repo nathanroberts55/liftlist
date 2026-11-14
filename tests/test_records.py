@@ -143,17 +143,28 @@ def test_other_users_and_in_progress_sessions_do_not_count(user, other_user, see
 
 
 @pytest.mark.django_db
-def test_weight_distance_records_use_weight_without_rep_prs(user, muscles):
+def test_distance_records_use_weight_without_rep_prs(user, muscles):
     exercise = Exercise.objects.create(
         user=None,
         name="Sled Push",
         primary_muscle=muscles["Quads"],
-        tracking_type=Exercise.TrackingType.WEIGHT_DISTANCE,
+        tracking_type=Exercise.TrackingType.DISTANCE,
+        default_distance_unit="YD",
     )
     earlier = make_session(user, day=date(2026, 11, 2))
-    add_exercise(earlier, exercise, [{"weight_lb": "100", "distance_mi": "0.5"}])
+    add_exercise(
+        earlier,
+        exercise,
+        [{"weight_lb": "100", "distance_m": "13.7160"}],
+        distance_unit="YD",
+    )
     session = make_session(user, day=TODAY)
-    add_exercise(session, exercise, [{"weight_lb": "120", "distance_mi": "0.5"}])
+    add_exercise(
+        session,
+        exercise,
+        [{"weight_lb": "120", "distance_m": "13.7160"}],
+        distance_unit="YD",
+    )
 
     prs = records.prs_set_in_session(session)
     result = records.prs_for_exercise(user, exercise)

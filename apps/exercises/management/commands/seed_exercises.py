@@ -7,7 +7,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
-from apps.exercises.models import Exercise, MuscleGroup
+from apps.exercises.models import DistanceUnit, Exercise, MuscleGroup
 
 
 class Command(BaseCommand):
@@ -41,6 +41,7 @@ class Command(BaseCommand):
 
                 primary = muscles[row["primary"]]
                 secondary = [muscles[muscle] for muscle in row.get("secondary", [])]
+                unit = row.get("default_distance_unit", DistanceUnit.MILES)
                 exercise = Exercise.objects.filter(user=None, name__iexact=name).first()
                 if exercise is None:
                     exercise = Exercise.objects.create(
@@ -48,6 +49,7 @@ class Command(BaseCommand):
                         name=name,
                         primary_muscle=primary,
                         tracking_type=row["tracking_type"],
+                        default_distance_unit=unit,
                     )
                     exercise.secondary_muscles.set(secondary)
                     created += 1
@@ -58,16 +60,19 @@ class Command(BaseCommand):
                     exercise.name != name
                     or exercise.primary_muscle_id != primary.pk
                     or exercise.tracking_type != row["tracking_type"]
+                    or exercise.default_distance_unit != unit
                     or current_secondary != {muscle.pk for muscle in secondary}
                 ):
                     exercise.name = name
                     exercise.primary_muscle = primary
                     exercise.tracking_type = row["tracking_type"]
+                    exercise.default_distance_unit = unit
                     exercise.save(
                         update_fields=[
                             "name",
                             "primary_muscle",
                             "tracking_type",
+                            "default_distance_unit",
                             "updated_at",
                         ]
                     )
@@ -95,6 +100,16 @@ class Command(BaseCommand):
         tracking_type = row.get("tracking_type")
         if tracking_type not in Exercise.TrackingType.values:
             raise CommandError(f"{where} ({name}): unknown tracking type {tracking_type!r}.")
+        unit = row.get("default_distance_unit", DistanceUnit.MILES)
+        if unit not in DistanceUnit.values:
+            raise CommandError(f"{where} ({name}): unknown default distance unit {unit!r}.")
+        if unit != DistanceUnit.MILES and tracking_type not in (
+            Exercise.TrackingType.CARDIO,
+            Exercise.TrackingType.DISTANCE,
+        ):
+            raise CommandError(
+                f"{where} ({name}): a distance unit only applies to CARDIO or DISTANCE."
+            )
         secondary = row.get("secondary", [])
         if not isinstance(secondary, list) or any(muscle not in muscles for muscle in secondary):
             raise CommandError(f"{where} ({name}): unknown secondary muscle.")

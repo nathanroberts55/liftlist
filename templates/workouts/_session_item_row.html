@@ -3,7 +3,7 @@
 One exercise row in the plan-and-start / retro-log builder. Alpine only hides
 targets that do not apply; every field still submits when JavaScript is off.
 {% endcomment %}
-<div class="rounded-2xl border border-base-300 bg-base-200/40 p-3" x-data="{ tracking: '{{ form.selected_tracking|escapejs }}' }">
+<div class="rounded-2xl border border-base-300 bg-base-200/40 p-3" x-data="{ tracking: '{{ form.selected_tracking|escapejs }}', unit: '{{ form.distance_unit.value|default:'' }}' }">
   {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
 
   <div>
@@ -21,7 +21,7 @@ targets that do not apply; every field still submits when JavaScript is off.
   {% endif %}
 
   <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-    <div x-show="['WEIGHT_REPS','BODYWEIGHT','TIMED','WEIGHT_DISTANCE'].includes(tracking)">
+    <div x-show="['WEIGHT_REPS','BODYWEIGHT','TIMED','DISTANCE'].includes(tracking)">
       <label for="{{ form.target_sets.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_sets.label }}</label>
       {{ form.target_sets }}
       {% for error in form.target_sets.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
@@ -41,10 +41,15 @@ targets that do not apply; every field still submits when JavaScript is off.
       {{ form.target_seconds }}
       {% for error in form.target_seconds.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
     </div>
-    <div x-show="['CARDIO','WEIGHT_DISTANCE'].includes(tracking)">
-      <label for="{{ form.target_distance_mi.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_distance_mi.label }}</label>
-      {{ form.target_distance_mi }}
-      {% for error in form.target_distance_mi.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+    <div x-show="['CARDIO','DISTANCE'].includes(tracking)">
+      <label for="{{ form.target_distance.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.target_distance.label }}</label>
+      {{ form.target_distance }}
+      {% for error in form.target_distance.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+    <div x-show="['CARDIO','DISTANCE'].includes(tracking)">
+      <label for="{{ form.distance_unit.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.distance_unit.label }}</label>
+      {{ form.distance_unit }}
+      {% for error in form.distance_unit.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
     </div>
     <div class="col-span-2 sm:col-span-1">
       <label for="{{ form.rest_seconds.id_for_label }}" class="mb-1.5 block text-sm font-medium">{{ form.rest_seconds.label }}</label>

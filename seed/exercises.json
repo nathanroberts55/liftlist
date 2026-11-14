@@ -385,7 +385,8 @@
       "Back",
       "Core"
     ],
-    "tracking_type": "WEIGHT_DISTANCE"
+    "tracking_type": "DISTANCE",
+    "default_distance_unit": "YD"
   },
   {
     "name": "Dead Hang",
@@ -684,7 +685,8 @@
       "Glutes",
       "Calves"
     ],
-    "tracking_type": "WEIGHT_DISTANCE"
+    "tracking_type": "DISTANCE",
+    "default_distance_unit": "YD"
   },
   {
     "name": "Sled Pull",
@@ -692,6 +694,7 @@
     "secondary": [
       "Back"
     ],
-    "tracking_type": "WEIGHT_DISTANCE"
+    "tracking_type": "DISTANCE",
+    "default_distance_unit": "YD"
   }
 ]

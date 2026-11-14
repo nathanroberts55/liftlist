@@ -101,25 +101,28 @@ def test_plan_item_cardio_summary(plan_day, seeded_exercise):
         exercise=seeded_exercise,
         target_sets=1,
         target_seconds=1800,
-        target_distance_mi=Decimal("3.10"),
+        target_distance_m=Decimal("4988.9664"),
+        distance_unit="MI",
     )
 
     assert item.target_summary == "30:00 · 3.1 mi"
 
 
 @pytest.mark.django_db
-def test_plan_item_weight_distance_summary(plan_day, seeded_exercise):
-    seeded_exercise.tracking_type = Exercise.TrackingType.WEIGHT_DISTANCE
+def test_plan_item_distance_summary(plan_day, seeded_exercise):
+    seeded_exercise.tracking_type = Exercise.TrackingType.DISTANCE
+    seeded_exercise.default_distance_unit = "YD"
     seeded_exercise.save()
 
     item = PlanItem.objects.create(
         plan_day=plan_day,
         exercise=seeded_exercise,
         target_sets=4,
-        target_distance_mi=Decimal("0.50"),
+        target_distance_m=Decimal("13.7160"),
+        distance_unit="YD",
     )
 
-    assert item.target_summary == "4 × 0.5 mi"
+    assert item.target_summary == "4 × 15 yd"
 
 
 @pytest.mark.django_db

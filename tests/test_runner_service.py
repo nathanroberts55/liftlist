@@ -665,7 +665,7 @@ def test_validate_weight_reps_requires_weight_and_reps():
         "weight_lb": 225,
         "reps": 8,
         "duration_seconds": None,
-        "distance_mi": None,
+        "distance_m": None,
         "difficulty": 7,
     }
 
@@ -721,11 +721,11 @@ def test_validate_timed_accepts_seconds_or_mmss():
 def test_validate_cardio_parses_duration_and_distance():
     values = runner.validate_set_fields(
         Exercise.TrackingType.CARDIO,
-        {"duration": "30:00", "distance_mi": "3.1"},
+        {"duration": "30:00", "distance": "3.1"},
     )
 
     assert values["duration_seconds"] == 1800
-    assert values["distance_mi"] == Decimal("3.10")
+    assert values["distance_m"] == Decimal("4988.9664")
     assert values["weight_lb"] is None
     assert values["reps"] is None
 
@@ -733,11 +733,27 @@ def test_validate_cardio_parses_duration_and_distance():
 def test_validate_cardio_accepts_distance_only():
     values = runner.validate_set_fields(
         Exercise.TrackingType.CARDIO,
-        {"distance_mi": "2.48"},
+        {"distance": "2.48"},
     )
 
     assert values["duration_seconds"] is None
-    assert values["distance_mi"] == Decimal("2.48")
+    assert values["distance_m"] == Decimal("3991.1731")
+
+
+def test_validate_cardio_converts_yards_and_metres():
+    yards = runner.validate_set_fields(
+        Exercise.TrackingType.CARDIO,
+        {"distance": "15"},
+        distance_unit="YD",
+    )
+    assert yards["distance_m"] == Decimal("13.7160")
+
+    metres = runner.validate_set_fields(
+        Exercise.TrackingType.CARDIO,
+        {"distance": "400"},
+        distance_unit="M",
+    )
+    assert metres["distance_m"] == Decimal("400.0000")
 
 
 def test_validate_cardio_accepts_duration_only():
@@ -747,23 +763,36 @@ def test_validate_cardio_accepts_duration_only():
     )
 
     assert values["duration_seconds"] == 2700
-    assert values["distance_mi"] is None
+    assert values["distance_m"] is None
 
 
 def test_validate_cardio_requires_duration_or_distance():
     with pytest.raises(ValidationError):
         runner.validate_set_fields(Exercise.TrackingType.CARDIO, {})
     with pytest.raises(ValidationError):
-        runner.validate_set_fields(Exercise.TrackingType.CARDIO, {"distance_mi": ""})
+        runner.validate_set_fields(Exercise.TrackingType.CARDIO, {"distance": ""})
 
 
-def test_validate_weight_distance_requires_weight_but_distance_is_optional():
-    values = runner.validate_set_fields(
-        Exercise.TrackingType.WEIGHT_DISTANCE,
-        {"weight_lb": "100"},
+def test_validate_distance_requires_distance_or_steps():
+    steps = runner.validate_set_fields(
+        Exercise.TrackingType.DISTANCE,
+        {"reps": "24"},
+        distance_unit="YD",
     )
-    assert values["weight_lb"] == 100
-    assert values["distance_mi"] is None
+    assert steps["reps"] == 24
+    assert steps["weight_lb"] is None
+
+    both = runner.validate_set_fields(
+        Exercise.TrackingType.DISTANCE,
+        {"weight_lb": "90", "reps": "24", "distance": "15"},
+        distance_unit="YD",
+    )
+    assert both["distance_m"] == Decimal("13.7160")
+    assert both["weight_lb"] == 90
 
     with pytest.raises(ValidationError):
-        runner.validate_set_fields(Exercise.TrackingType.WEIGHT_DISTANCE, {})
+        runner.validate_set_fields(
+            Exercise.TrackingType.DISTANCE,
+            {"weight_lb": "100"},
+            distance_unit="YD",
+        )

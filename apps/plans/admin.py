@@ -30,7 +30,8 @@ class PlanItemInline(admin.TabularInline):
         "rep_min",
         "rep_max",
         "target_seconds",
-        "target_distance_mi",
+        "target_distance_m",
+        "distance_unit",
         "rest_seconds",
     )
 

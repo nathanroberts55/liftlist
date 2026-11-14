@@ -97,23 +97,32 @@ steppers are progressive enhancement; inputs stay typeable with JavaScript off.
         <input id="duration" name="duration" type="text" inputmode="numeric" pattern="[0-9]+:[0-5][0-9]" value="{{ values.duration }}" placeholder="30:00" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold" data-autofocus>
       </div>
       <div>
-        <label for="distance_mi" class="mb-1.5 block text-sm font-medium">Distance (mi) <span class="font-normal text-base-content/50">(optional)</span></label>
-        <input id="distance_mi" name="distance_mi" type="number" inputmode="decimal" step="any" min="0" value="{{ values.distance_mi }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold">
+        <label for="distance" class="mb-1.5 block text-sm font-medium">Distance ({{ session_exercise.distance_unit_short }}) <span class="font-normal text-base-content/50">(optional)</span></label>
+        <input id="distance" name="distance" type="number" inputmode="decimal" step="any" min="0" value="{{ values.distance }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold">
       </div>
       <p class="text-[12px] text-base-content/50">Enter a duration, a distance, or both.</p>
-    {% elif tracking_type == "WEIGHT_DISTANCE" %}
+    {% elif tracking_type == "DISTANCE" %}
       <div>
-        <label for="weight_lb" class="mb-1.5 block text-sm font-medium">Weight (lb)</label>
+        <label for="distance" class="mb-1.5 block text-sm font-medium">Distance ({{ session_exercise.distance_unit_short }}) <span class="font-normal text-base-content/50">(optional)</span></label>
+        <input id="distance" name="distance" type="number" inputmode="decimal" step="any" min="0" value="{{ values.distance }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold" data-autofocus>
+      </div>
+      <div>
+        <label for="reps" class="mb-1.5 block text-sm font-medium">Steps (each way) <span class="font-normal text-base-content/50">(optional)</span></label>
         <div class="flex items-stretch gap-2">
-          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-5" data-step-target="weight_lb" aria-label="Decrease weight by 5 pounds">−</button>
-          <input id="weight_lb" name="weight_lb" type="number" inputmode="decimal" step="any" min="0" value="{{ values.weight_lb }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold" required data-autofocus>
-          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="5" data-step-target="weight_lb" aria-label="Increase weight by 5 pounds">+</button>
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-1" data-step-target="reps" aria-label="Decrease steps by 1">−</button>
+          <input id="reps" name="reps" type="number" inputmode="numeric" step="1" min="1" value="{{ values.reps }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="1" data-step-target="reps" aria-label="Increase steps by 1">+</button>
         </div>
       </div>
       <div>
-        <label for="distance_mi" class="mb-1.5 block text-sm font-medium">Distance (mi) <span class="font-normal text-base-content/50">(optional)</span></label>
-        <input id="distance_mi" name="distance_mi" type="number" inputmode="decimal" step="any" min="0" value="{{ values.distance_mi }}" class="ll-input h-14 min-h-14 w-full text-center text-2xl font-semibold">
+        <label for="weight_lb" class="mb-1.5 block text-sm font-medium">Weight (lb) <span class="font-normal text-base-content/50">(optional)</span></label>
+        <div class="flex items-stretch gap-2">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="-5" data-step-target="weight_lb" aria-label="Decrease weight by 5 pounds">−</button>
+          <input id="weight_lb" name="weight_lb" type="number" inputmode="decimal" step="any" min="0" value="{{ values.weight_lb }}" class="ll-input h-14 min-h-14 flex-1 text-center text-2xl font-semibold">
+          <button type="button" class="btn btn-neutral h-14 min-h-14 w-14 shrink-0 text-xl" data-step="5" data-step-target="weight_lb" aria-label="Increase weight by 5 pounds">+</button>
+        </div>
       </div>
+      <p class="text-[12px] text-base-content/50">Enter a distance, steps, or both.</p>
     {% endif %}
 
     <fieldset>

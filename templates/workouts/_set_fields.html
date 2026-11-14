@@ -12,11 +12,11 @@ label and a stable id (the add form supplies a unique auto_id prefix).
 {% endif %}
 
 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-  {% if tracking_type == "WEIGHT_REPS" or tracking_type == "WEIGHT_DISTANCE" or tracking_type == "BODYWEIGHT" or tracking_type == "TIMED" %}
+  {% if tracking_type == "WEIGHT_REPS" or tracking_type == "DISTANCE" or tracking_type == "BODYWEIGHT" or tracking_type == "TIMED" %}
     <div>
       <label for="{{ form.weight_lb.id_for_label }}" class="mb-1.5 block text-sm font-medium">
         {{ form.weight_lb.label }}
-        {% if tracking_type == "BODYWEIGHT" or tracking_type == "TIMED" %}
+        {% if tracking_type == "BODYWEIGHT" or tracking_type == "TIMED" or tracking_type == "DISTANCE" %}
           <span class="font-normal text-base-content/50">(optional)</span>
         {% endif %}
       </label>
@@ -33,6 +33,16 @@ label and a stable id (the add form supplies a unique auto_id prefix).
     </div>
   {% endif %}
 
+  {% if tracking_type == "DISTANCE" %}
+    <div>
+      <label for="{{ form.reps.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+        {{ form.reps.label }} <span class="font-normal text-base-content/50">(optional)</span>
+      </label>
+      {{ form.reps }}
+      {% for error in form.reps.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+    </div>
+  {% endif %}
+
   {% if tracking_type == "TIMED" or tracking_type == "CARDIO" %}
     <div>
       <label for="{{ form.duration.id_for_label }}" class="mb-1.5 block text-sm font-medium">
@@ -43,14 +53,14 @@ label and a stable id (the add form supplies a unique auto_id prefix).
     </div>
   {% endif %}
 
-  {% if tracking_type == "CARDIO" or tracking_type == "WEIGHT_DISTANCE" %}
+  {% if tracking_type == "CARDIO" or tracking_type == "DISTANCE" %}
     <div>
-      <label for="{{ form.distance_mi.id_for_label }}" class="mb-1.5 block text-sm font-medium">
-        {{ form.distance_mi.label }}
-        {% if tracking_type == "CARDIO" %}<span class="font-normal text-base-content/50">(optional)</span>{% endif %}
+      <label for="{{ form.distance.id_for_label }}" class="mb-1.5 block text-sm font-medium">
+        {{ form.distance.label }}
+        {% if tracking_type == "CARDIO" or tracking_type == "DISTANCE" %}<span class="font-normal text-base-content/50">(optional)</span>{% endif %}
       </label>
-      {{ form.distance_mi }}
-      {% for error in form.distance_mi.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
+      {{ form.distance }}
+      {% for error in form.distance.errors %}<p class="mt-1.5 text-sm text-error" role="alert">{{ error }}</p>{% endfor %}
     </div>
   {% endif %}
 

@@ -147,7 +147,8 @@ SessionExercise ─1:N─ SetLog
 | name | Char(100) | |
 | primary_muscle | FK(MuscleGroup, PROTECT) | |
 | secondary_muscles | M2M(MuscleGroup) blank | |
-| tracking_type | Char choices | `WEIGHT_REPS`, `BODYWEIGHT`, `TIMED`, `CARDIO`, `WEIGHT_DISTANCE` |
+| tracking_type | Char choices | `WEIGHT_REPS`, `BODYWEIGHT`, `TIMED`, `CARDIO`, `DISTANCE` |
+| default_distance_unit | Char choices | `MI`, `YD`, `M` (default `MI`). Used by `CARDIO`/`DISTANCE` unless an item overrides it. |
 | notes | Text blank | |
 | is_archived | Bool default False | |
 
@@ -194,7 +195,8 @@ SessionExercise ─1:N─ SetLog
 | target_sets | PositiveSmallInt | Default 3. |
 | rep_min / rep_max | PositiveSmallInt null | `WEIGHT_REPS`, `BODYWEIGHT`. Check `rep_min <= rep_max`. |
 | target_seconds | PositiveInt null | `TIMED`, `CARDIO`. |
-| target_distance_mi | Decimal(6,2) null | `CARDIO`, `WEIGHT_DISTANCE`. |
+| target_distance_m | Decimal(12,4) null | Canonical metres. `CARDIO`, `DISTANCE`. |
+| distance_unit | Char choices | `MI`, `YD`, `M`. Snapshot of the display unit. |
 | rest_seconds | PositiveSmallInt | Default from UserSettings. |
 | notes | Char(200) blank | |
 
@@ -252,7 +254,7 @@ SessionExercise ─1:N─ SetLog
 | superset_group | Char(1) blank | Copied from PlanItem. |
 | target_sets | PositiveSmallInt | Incremented by "Add set". |
 | planned_sets | PositiveSmallInt | Original target; never changes. Used for the increase flag and "x of y planned". |
-| rep_min, rep_max, target_seconds, target_distance_mi, rest_seconds | as PlanItem | Snapshot. |
+| rep_min, rep_max, target_seconds, target_distance_m, distance_unit, rest_seconds | as PlanItem | Snapshot. |
 | status | Char choices | `PENDING`, `IN_PROGRESS`, `DONE`, `SKIPPED` |
 
 **SetLog**
@@ -263,20 +265,28 @@ SessionExercise ─1:N─ SetLog
 | set_number | PositiveSmallInt | 1-based. |
 | status | Char choices | `DONE`, `SKIPPED` |
 | weight_lb | Decimal(6,2) null | Weight or added weight. |
-| reps | PositiveSmallInt null | |
+| reps | PositiveSmallInt null | Reps, or steps for `DISTANCE`. |
 | duration_seconds | PositiveInt null | |
-| distance_mi | Decimal(6,2) null | |
+| distance_m | Decimal(12,4) null | Canonical metres. |
 | difficulty | PositiveSmallInt null | 1–10, check constraint. |
 | is_extra | Bool | True if `set_number > planned_sets`. |
 | client_id | UUID unique | Idempotency key generated in the form. Duplicate submit returns the existing row. |
 | completed_at | DateTime | |
 
 - Constraint: unique (`session_exercise`, `set_number`).
-- Validation per tracking type (PRD §8.2) lives in one function `validate_set_fields(tracking_type, data)`, used by the runner and edit forms. `CARDIO` requires at least one of duration or distance, and distance values are accepted at full decimal precision.
+- Validation per tracking type (PRD §8.2) lives in one function `validate_set_fields(tracking_type, data, *, distance_unit)`, used by the runner and edit forms. `CARDIO` requires at least one of duration or distance; `DISTANCE` requires at least one of distance or steps; weight is optional for `DISTANCE`. Display-unit distance is converted to metres before saving.
 
 ## 4. Domain services
 
 Business logic lives in `apps/<app>/services/*.py` as plain functions. Views stay thin: parse input → call service → render. Every service listed here **must have unit tests**.
+
+### 4.0 `exercises/services/units.py`
+
+- Constants: `METERS_PER_UNIT = {MI: 1609.344, YD: 0.9144, M: 1}` and `METERS_QUANTUM = 0.0001`.
+- `normalize_unit(unit) -> DistanceUnit`: blanks or unknown values fall back to miles.
+- `to_meters(value, unit) -> Decimal | None` / `from_meters(meters, unit)`: convert display units to canonical metres and back, rounded half-up to 4 dp.
+- `display_value(meters, unit)` / `format_distance(meters, unit)`: trimmed input text and compact labels (`2.48 mi`, `15 yd`, `400 m`).
+- Distance targets and set logs are always stored through these helpers; templates never do unit maths.
 
 ### 4.1 `plans/services/scheduling.py`
 
@@ -482,7 +492,7 @@ Adding any other dependency requires an ADR (see AGENTS.md).
 
 ## 9. Seed data
 
-- `seed/exercises.json`: list of `{name, primary, secondary[], tracking_type}`.
+- `seed/exercises.json`: list of `{name, primary, secondary[], tracking_type, default_distance_unit?}`. Sled Push, Sled Pull, and Farmer's Carry use `DISTANCE` with `YD`; cardio exercises default to `MI`.
 - Muscle groups are created by a **data migration** in `exercises` (stable, required for FKs).
 - `python manage.py seed_exercises`: idempotent upsert by name for `user IS NULL` rows. It never deletes and never overwrites user archives. Runs in `entrypoint.sh` after `migrate`.
 
@@ -562,8 +572,9 @@ Restore: `pg_restore -c -U liftlist -d liftlist <file>.dump`. A k8s `CronJob` is
   - progression: last-time preference (same plan day first), prefill fallbacks, increase flag (PRD AC cases, extra sets ignored, skipped sets block the flag)
   - records: heaviest weight, rep PR rules (first use of a weight is not a rep PR)
   - summary + aggregations: tonnage, weekly volume grouping, adherence, streak
-  - set validation per tracking type (including `CARDIO` with duration-only, distance-only, and neither), idempotent `client_id`
-  - unscheduled/retro builders: one-exercise session, `add_row` re-render, distance values with two decimal places (e.g. `2.48`)
+  - set validation per tracking type (including `CARDIO` with duration-only, distance-only, and neither; `DISTANCE` with steps-only and neither), idempotent `client_id`
+  - distance units: metre round-trips for `2.48 mi` / `15 yd` / `400 m`, unit snapshots, and form overrides
+  - unscheduled/retro builders: one-exercise session, `add_row` re-render, distance values with decimal precision (e.g. `2.48`)
 - **View tests:** auth required on every route, user data isolation (user B gets 404 on user A's objects), runner happy path via the test client.
 - Use `freezegun` for any date logic. Never depend on the real current date.
 - CI must pass before merge.

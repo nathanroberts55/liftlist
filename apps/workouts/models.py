@@ -8,6 +8,8 @@ from django.db.models import F, Q
 from django.db.models.functions import Lower
 from django.utils import timezone
 
+from apps.exercises.models import DistanceUnit
+
 
 class Tag(models.Model):
     """A user-defined session tag (F-06 stores and filters by these later)."""
@@ -178,11 +180,16 @@ class SessionExercise(models.Model):
     rep_min = models.PositiveSmallIntegerField(null=True, blank=True)
     rep_max = models.PositiveSmallIntegerField(null=True, blank=True)
     target_seconds = models.PositiveIntegerField(null=True, blank=True)
-    target_distance_mi = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
+    target_distance_m = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
         null=True,
         blank=True,
+    )
+    distance_unit = models.CharField(
+        max_length=2,
+        choices=DistanceUnit.choices,
+        default=DistanceUnit.MILES,
     )
     rest_seconds = models.PositiveSmallIntegerField(default=90)
     status = models.CharField(
@@ -246,6 +253,7 @@ class SessionExercise(models.Model):
     def target_summary(self) -> str:
         """Short target label used on Today and in the runner."""
         from apps.exercises.models import Exercise
+        from apps.exercises.services.units import format_distance
 
         tracking = self.exercise.tracking_type
         if tracking in (Exercise.TrackingType.WEIGHT_REPS, Exercise.TrackingType.BODYWEIGHT):
@@ -265,19 +273,25 @@ class SessionExercise(models.Model):
             parts = []
             if self.target_seconds:
                 parts.append(_format_seconds(self.target_seconds))
-            if self.target_distance_mi is not None:
-                parts.append(f"{_trim_decimal(self.target_distance_mi)} mi")
+            if self.target_distance_m is not None:
+                parts.append(format_distance(self.target_distance_m, self.distance_unit))
             return " · ".join(parts) or "1 set"
-        if tracking == Exercise.TrackingType.WEIGHT_DISTANCE:
-            if self.target_distance_mi is not None:
-                return f"{self.target_sets} × {_trim_decimal(self.target_distance_mi)} mi"
+        if tracking == Exercise.TrackingType.DISTANCE:
+            if self.target_distance_m is not None:
+                distance = format_distance(self.target_distance_m, self.distance_unit)
+                return f"{self.target_sets} × {distance}"
             return f"{self.target_sets} sets"
         return f"{self.target_sets} sets"
+
+    @property
+    def distance_unit_short(self) -> str:
+        return DistanceUnit(self.distance_unit).short_label
 
     @property
     def goal_label(self) -> str:
         """The sentence shown under the set count, e.g. ``Goal 8–12 reps``."""
         from apps.exercises.models import Exercise
+        from apps.exercises.services.units import format_distance
 
         tracking = self.exercise.tracking_type
         if tracking in (Exercise.TrackingType.WEIGHT_REPS, Exercise.TrackingType.BODYWEIGHT):
@@ -297,12 +311,12 @@ class SessionExercise(models.Model):
             parts = []
             if self.target_seconds:
                 parts.append(_format_seconds(self.target_seconds))
-            if self.target_distance_mi is not None:
-                parts.append(f"{_trim_decimal(self.target_distance_mi)} mi")
+            if self.target_distance_m is not None:
+                parts.append(format_distance(self.target_distance_m, self.distance_unit))
             return "Goal " + " · ".join(parts) if parts else "Goal 1 set"
-        if tracking == Exercise.TrackingType.WEIGHT_DISTANCE:
-            if self.target_distance_mi is not None:
-                return f"Goal {_trim_decimal(self.target_distance_mi)} mi"
+        if tracking == Exercise.TrackingType.DISTANCE:
+            if self.target_distance_m is not None:
+                return f"Goal {format_distance(self.target_distance_m, self.distance_unit)}"
             return f"Goal {self.target_sets} sets"
         return f"Goal {self.target_sets} sets"
 
@@ -329,9 +343,9 @@ class SetLog(models.Model):
     )
     reps = models.PositiveSmallIntegerField(null=True, blank=True)
     duration_seconds = models.PositiveIntegerField(null=True, blank=True)
-    distance_mi = models.DecimalField(
-        max_digits=6,
-        decimal_places=2,
+    distance_m = models.DecimalField(
+        max_digits=12,
+        decimal_places=4,
         null=True,
         blank=True,
     )
@@ -361,8 +375,10 @@ class SetLog(models.Model):
     @property
     def display_value(self) -> str:
         from apps.exercises.models import Exercise
+        from apps.exercises.services.units import format_distance
 
         tracking = self.session_exercise.exercise.tracking_type
+        unit = self.session_exercise.distance_unit
         if tracking == Exercise.TrackingType.WEIGHT_REPS:
             weight = _trim_decimal(self.weight_lb) if self.weight_lb is not None else "—"
             return f"{weight} × {self.reps or 0}"
@@ -379,14 +395,17 @@ class SetLog(models.Model):
             parts = []
             if self.duration_seconds is not None:
                 parts.append(_format_seconds(self.duration_seconds))
-            if self.distance_mi is not None:
-                parts.append(f"{_trim_decimal(self.distance_mi)} mi")
+            if self.distance_m is not None:
+                parts.append(format_distance(self.distance_m, unit))
             return " · ".join(parts) or "—"
-        if tracking == Exercise.TrackingType.WEIGHT_DISTANCE:
-            weight = _trim_decimal(self.weight_lb) if self.weight_lb is not None else "—"
-            if self.distance_mi is not None:
-                return f"{weight} × {_trim_decimal(self.distance_mi)} mi"
-            return f"{weight} lb"
+        if tracking == Exercise.TrackingType.DISTANCE:
+            weight = _trim_decimal(self.weight_lb) if self.weight_lb is not None else None
+            reps = f"{self.reps} steps" if self.reps is not None else None
+            distance = (
+                format_distance(self.distance_m, unit) if self.distance_m is not None else None
+            )
+            values = [value for value in (weight and f"{weight} lb", reps, distance) if value]
+            return " · ".join(values) or "—"
         return "—"
 
 

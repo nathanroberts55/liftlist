@@ -1,4 +1,5 @@
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -355,7 +356,7 @@ def test_clean_item_targets_weight_reps_normalizes(user, seeded_exercise):
         rep_min="6",
         rep_max="8",
         target_seconds="60",
-        target_distance_mi="3.5",
+        target_distance_m="5632.7040",
         rest_seconds="120",
     )
 
@@ -364,7 +365,8 @@ def test_clean_item_targets_weight_reps_normalizes(user, seeded_exercise):
         "rep_min": 6,
         "rep_max": 8,
         "target_seconds": None,
-        "target_distance_mi": None,
+        "target_distance_m": None,
+        "distance_unit": "MI",
         "rest_seconds": 120,
     }
 
@@ -404,13 +406,15 @@ def test_clean_item_targets_cardio_forces_one_set(user, seeded_exercise):
     cleaned = clean_item_targets(
         seeded_exercise,
         target_sets=5,
-        target_distance_mi="2.5",
+        target_distance_m="4023.3600",
+        distance_unit="MI",
         rest_seconds=0,
     )
 
     assert cleaned["target_sets"] == 1
     assert cleaned["rep_min"] is None
-    assert cleaned["target_distance_mi"] == 2.5
+    assert cleaned["target_distance_m"] == Decimal("4023.3600")
+    assert cleaned["distance_unit"] == "MI"
 
 
 @pytest.mark.django_db

@@ -48,7 +48,7 @@ this overlay is never rendered (rest_seconds is 0 on a normal GET).
       </p>
       <p class="mt-1 text-[13px] text-base-content/50">
         Pre-filled:
-        {% if values.weight_lb %}{{ values.weight_lb }} lb{% if values.reps %} × {{ values.reps }}{% endif %}{% if values.distance_mi %} × {{ values.distance_mi }} mi{% endif %}{% elif values.reps %}{{ values.reps }} reps{% if values.distance_mi %} · {{ values.distance_mi }} mi{% endif %}{% elif values.duration %}{{ values.duration }}{% if values.distance_mi %} · {{ values.distance_mi }} mi{% endif %}{% elif values.distance_mi %}{{ values.distance_mi }} mi{% elif values.duration_seconds %}{{ values.duration_seconds }}s{% else %}tap to enter{% endif %}
+        {% if values.weight_lb %}{{ values.weight_lb }} lb{% if values.reps %} × {{ values.reps }}{% endif %}{% if values.distance %} · {{ values.distance }} {{ session_exercise.distance_unit_short }}{% endif %}{% elif values.reps %}{{ values.reps }}{% if tracking_type == "DISTANCE" %} steps{% else %} reps{% endif %}{% if values.distance %} · {{ values.distance }} {{ session_exercise.distance_unit_short }}{% endif %}{% elif values.duration %}{{ values.duration }}{% if values.distance %} · {{ values.distance }} {{ session_exercise.distance_unit_short }}{% endif %}{% elif values.distance %}{{ values.distance }} {{ session_exercise.distance_unit_short }}{% elif values.duration_seconds %}{{ values.duration_seconds }}s{% else %}tap to enter{% endif %}
       </p>
     </div>
 

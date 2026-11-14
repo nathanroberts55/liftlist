@@ -5,6 +5,7 @@ validation, ordering, or when the schedule must be regenerated lives here.
 """
 
 from collections import Counter
+from decimal import Decimal, InvalidOperation
 from itertools import groupby
 
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -14,11 +15,15 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from apps.exercises.models import Exercise, MuscleGroup
+from apps.exercises.services import units as distance_units
 
 from ..models import Plan, PlanDay, PlanItem
 from . import scheduling
 
 SUPERSET_LABELS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+# 10,000 miles in metres.
+MAX_DISTANCE_M = Decimal("16093440")
 
 
 # --- Reads ------------------------------------------------------------------
@@ -185,7 +190,8 @@ def duplicate_plan(user, plan: Plan) -> Plan:
                 rep_min=item.rep_min,
                 rep_max=item.rep_max,
                 target_seconds=item.target_seconds,
-                target_distance_mi=item.target_distance_mi,
+                target_distance_m=item.target_distance_m,
+                distance_unit=item.distance_unit,
                 rest_seconds=item.rest_seconds,
                 notes=item.notes,
             )
@@ -295,7 +301,8 @@ def clean_item_targets(
     rep_min=None,
     rep_max=None,
     target_seconds=None,
-    target_distance_mi=None,
+    target_distance_m=None,
+    distance_unit=None,
     rest_seconds=90,
 ) -> dict:
     """Validate targets for the exercise's tracking type and normalize them."""
@@ -320,17 +327,18 @@ def clean_item_targets(
     rep_max = as_int(rep_max, "rep_max", minimum=1, maximum=999)
     seconds = as_int(target_seconds, "target_seconds", minimum=1, maximum=86400)
     rest = as_int(rest_seconds, "rest_seconds", minimum=0, maximum=3600)
+    unit = distance_units.normalize_unit(distance_unit or exercise.default_distance_unit)
     distance = None
-    if target_distance_mi not in (None, ""):
+    if target_distance_m not in (None, ""):
         try:
-            distance = round(float(target_distance_mi), 2)
-        except (TypeError, ValueError):
-            errors["target_distance_mi"] = "Enter a distance in miles."
+            distance = Decimal(str(target_distance_m))
+        except (InvalidOperation, ValueError):
+            errors["target_distance_m"] = "Enter a valid distance."
         else:
             if distance < 0:
-                errors["target_distance_mi"] = "Distance can't be negative."
-            elif distance > 9999:
-                errors["target_distance_mi"] = "Keep distance under 10,000 miles."
+                errors["target_distance_m"] = "Distance can't be negative."
+            elif distance > MAX_DISTANCE_M:
+                errors["target_distance_m"] = "Keep distance under 10,000 miles."
 
     tracking = exercise.tracking_type
     if tracking in (Exercise.TrackingType.WEIGHT_REPS, Exercise.TrackingType.BODYWEIGHT):
@@ -354,7 +362,7 @@ def clean_item_targets(
         rep_max = None
         if seconds is None and distance is None:
             errors["target_seconds"] = "Add a duration or a distance."
-    elif tracking == Exercise.TrackingType.WEIGHT_DISTANCE:
+    elif tracking == Exercise.TrackingType.DISTANCE:
         rep_min = None
         rep_max = None
         seconds = None
@@ -370,7 +378,8 @@ def clean_item_targets(
         "rep_min": rep_min,
         "rep_max": rep_max,
         "target_seconds": seconds,
-        "target_distance_mi": distance,
+        "target_distance_m": distance,
+        "distance_unit": unit,
         "rest_seconds": rest,
     }
 

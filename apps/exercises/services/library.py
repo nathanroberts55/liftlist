@@ -11,7 +11,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 
-from ..models import Exercise, ExerciseArchive, MuscleGroup
+from ..models import DistanceUnit, Exercise, ExerciseArchive, MuscleGroup
 
 # --- Reads ------------------------------------------------------------------
 
@@ -97,6 +97,7 @@ def create_exercise(
     name: str,
     primary_muscle: MuscleGroup,
     tracking_type: str,
+    default_distance_unit: str = DistanceUnit.MILES,
     secondary_muscles=(),
     notes: str = "",
 ) -> Exercise:
@@ -107,6 +108,7 @@ def create_exercise(
         name=name,
         primary_muscle=primary_muscle,
         tracking_type=tracking_type,
+        default_distance_unit=default_distance_unit,
         notes=notes.strip(),
     )
     exercise.clean_fields()
@@ -128,6 +130,7 @@ def update_exercise(
     name: str,
     primary_muscle: MuscleGroup,
     tracking_type: str,
+    default_distance_unit: str = DistanceUnit.MILES,
     secondary_muscles=(),
     notes: str = "",
 ) -> Exercise:
@@ -141,6 +144,7 @@ def update_exercise(
     exercise.name = name
     exercise.primary_muscle = primary_muscle
     exercise.tracking_type = tracking_type
+    exercise.default_distance_unit = default_distance_unit
     exercise.notes = notes.strip()
     exercise.clean_fields()
     try:

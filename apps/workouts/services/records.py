@@ -14,7 +14,7 @@ from ..models import Session, SetLog
 
 WEIGHT_TRACKING_TYPES = (
     Exercise.TrackingType.WEIGHT_REPS,
-    Exercise.TrackingType.WEIGHT_DISTANCE,
+    Exercise.TrackingType.DISTANCE,
 )
 
 

@@ -19,7 +19,7 @@ class SetLogInline(admin.TabularInline):
         "weight_lb",
         "reps",
         "duration_seconds",
-        "distance_mi",
+        "distance_m",
         "difficulty",
         "is_extra",
     )

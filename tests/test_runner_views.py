@@ -240,7 +240,7 @@ def test_log_set_accepts_a_distance_only_cardio_set(
         target_sets=1,
         rep_min=None,
         rep_max=None,
-        target_distance_mi=Decimal("2.48"),
+        target_distance_m=Decimal("3991.1731"),
     )
     session = _start(user, _scheduled(user, active_plan, active_plan_day))
     session_exercise = session.session_exercises.get()
@@ -248,12 +248,12 @@ def test_log_set_accepts_a_distance_only_cardio_set(
 
     response = client.post(
         reverse("session_log_set", args=[session.pk]),
-        {"exercise": session_exercise.pk, "distance_mi": "2.48"},
+        {"exercise": session_exercise.pk, "distance": "2.48"},
     )
 
     assert response.status_code == 302
     log = SetLog.objects.get(session_exercise=session_exercise)
-    assert log.distance_mi == Decimal("2.48")
+    assert log.distance_m == Decimal("3991.1731")
     assert log.duration_seconds is None
 
 
@@ -275,7 +275,7 @@ def test_rest_screen_shows_a_distance_only_prefill(
         target_sets=2,
         rep_min=None,
         rep_max=None,
-        target_distance_mi=Decimal("2.48"),
+        target_distance_m=Decimal("3991.1731"),
         rest_seconds=60,
     )
     session = _start(user, _scheduled(user, active_plan, active_plan_day))
@@ -284,7 +284,7 @@ def test_rest_screen_shows_a_distance_only_prefill(
 
     response = client.post(
         reverse("session_log_set", args=[session.pk]),
-        {"exercise": session_exercise.pk, "distance_mi": "2.48"},
+        {"exercise": session_exercise.pk, "distance": "2.48"},
         HTTP_HX_REQUEST="true",
         HTTP_HX_TARGET="runner",
     )
