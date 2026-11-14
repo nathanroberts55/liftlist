@@ -25,7 +25,7 @@
 | Packaging | `pip` + `requirements.txt` / `requirements-dev.txt` | Pin exact versions. |
 | Container | Docker (Dockerfile) → Docker Hub | |
 | Runtime | Kubernetes on home Linux server | Postgres runs on the same Linux server (outside the cluster). |
-| Ingress | Cloudflare Tunnel | TLS terminates at Cloudflare. |
+| Ingress | Cloudflare Tunnel + Traefik | Public TLS terminates at Cloudflare; the origin also serves a cert-manager certificate on 443 (ADR 0007). |
 | Tests / lint | pytest + pytest-django, Ruff (lint + format) | |
 
 JS libraries are **vendored** into `static/vendor/` with pinned versions (no CDN at runtime).
@@ -76,7 +76,8 @@ liftlist/
 │   ├── deployment.yaml
 │   ├── service.yaml
 │   ├── configmap.yaml
-│   ├── ingress.yaml          # Traefik host rule; TLS ends at Cloudflare
+│   ├── certificate.yaml      # cert-manager Certificate for origin TLS
+│   ├── ingress.yaml          # Traefik host/TLS rule; public TLS ends at Cloudflare
 │   ├── secret.example.yaml   # Committed template (Secret name app-secrets-example)
 │   ├── secrets.yaml          # Real Secret, gitignored, server-only
 │   └── README.md             # Apply order and secret workflow
@@ -541,7 +542,8 @@ exec gunicorn liftlist.wsgi:application --bind 0.0.0.0:8000 --workers ${GUNICORN
   - `readinessProbe` and `livenessProbe` on `GET /healthz/`, with `Host: <public-host>` so Django's `ALLOWED_HOSTS` accepts the kubelet request (the probe otherwise sends the pod IP and gets a 400)
   - resources: requests 100m CPU / 192Mi, limits 500m / 512Mi
 - `Service`: ClusterIP on port 8000.
-- `Ingress`: `k8s/ingress.yaml` routes `<public-host>` to the Service. No TLS block; Cloudflare terminates TLS and the tunnel forwards to Traefik on `http://localhost:80`.
+- `Ingress`: `k8s/ingress.yaml` routes `<public-host>` to the Service with `ingressClassName: traefik`, and its `tls` block serves the `liftlist` secret on Traefik's `websecure` entrypoint. Public traffic still ends at Cloudflare: the tunnel forwards to Traefik on `http://localhost:80`.
+- `Certificate`: `k8s/certificate.yaml` uses the `acme-issuer` ClusterIssuer (DNS-01 via Cloudflare) to issue a Let's Encrypt certificate into the `liftlist` secret for the host. cert-manager renews it automatically; the origin certificate only matters for direct HTTPS to Traefik, not for public visitors (ADR 0007).
 - `Secret`: `app-secrets` in the `liftlist` namespace. `k8s/secret.example.yaml` is the committed template (Secret name `app-secrets-example`); the real `k8s/secrets.yaml` is gitignored. Apply it explicitly and never run `kubectl apply -f k8s/`.
 - Postgres on the host: a dedicated database `liftlist` and role. `DATABASE_URL` is a standard libpq connection string (`postgres://user:pass@host:5432/liftlist`, optional `?sslmode=...`) pointing at the host address reachable from the cluster. Allow the pod CIDR in `pg_hba.conf` and ensure the role owns the database (or has `CREATE` on the `public` schema).
 - Migrations run at container start. `Recreate` keeps this safe for one replica. If replicas are ever > 1, move migrations to a k8s `Job` or initContainer (ADR required).

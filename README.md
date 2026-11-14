@@ -63,7 +63,7 @@ Open <http://localhost:8000>. The stack runs the app image and `postgres:16` wit
 
 - The image is built by `.github/workflows/docker-publish.yml` and pushed to `docker.io/nater55/liftlist`.
 - Kubernetes manifests live in `k8s/` (namespace `liftlist`, Service `liftlist`, Secret `app-secrets`).
-- `k8s/ingress.yaml` routes `liftlist.naterobertstech.com` to the Service. The Cloudflare Tunnel points at Traefik on `http://localhost:80`; Cloudflare terminates TLS.
+- `k8s/ingress.yaml` routes `liftlist.naterobertstech.com` to the Service. The Cloudflare Tunnel points at Traefik on `http://localhost:80`; Cloudflare terminates TLS for public traffic, and `k8s/certificate.yaml` also gives the origin a Let's Encrypt certificate on port 443.
 - Postgres runs on the host. `DATABASE_URL` is a standard libpq connection string, for example `postgres://ll_user:password@100.86.17.28:5432/liftlist`. Allow the pod CIDR in `pg_hba.conf`.
 - Copy `k8s/secret.example.yaml` to `k8s/secrets.yaml`, rename the Secret to `app-secrets`, fill in the values, and apply it explicitly. `k8s/secrets.yaml` is gitignored.
 - The probes send `Host: liftlist.naterobertstech.com` so Django's `ALLOWED_HOSTS` accepts the kubelet request; without it `/healthz/` returns 400.

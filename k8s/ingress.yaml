@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: liftlist
 spec:
+  ingressClassName: traefik
   rules:
     - host: liftlist.naterobertstech.com
       http:
@@ -17,3 +18,7 @@ spec:
                 name: liftlist
                 port:
                   number: 8000
+  tls:
+    - hosts:
+        - liftlist.naterobertstech.com
+      secretName: liftlist
